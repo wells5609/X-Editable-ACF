@@ -1,11 +1,10 @@
 <?php
 /*
 Plugin Name: X-Editable ACF
-Plugin URI: 
+Plugin URI: https://github.com/wells5609/X-Editable-ACF
 Description: Edit ACF from the front end using X-Editable.
-Version: 0.2.1
+Version: 0.2.2
 Author: Wells Peterson
-Author URI: http://wellspeterson.com/
 License: GPL
 Copyright: Wells Peterson
 */
@@ -13,7 +12,7 @@ Copyright: Wells Peterson
 /**
 * Setup the WP X-Editable plugin
 *
-* Use add_theme_support( 'x-editable' ); in theme functions.php to enable.
+* Use add_theme_support( 'x-editable-acf' ); in theme functions.php to enable.
 */
 
 add_action( 'init', 'x_editable_acf' );
@@ -24,11 +23,12 @@ function x_editable_acf() {
 		return false;
 	}
 	
+	require_once 'fields/xe-acf-field.php';
+	
+	require_once 'xe-acf-functions.php';
+	
 	new XE_ACF_Plugin();
-	
-	require_once 'x-editable-acf.php';
-	require_once 'x-editable-acf-functions.php';
-	
+		
 }
 
 // Plugin class
@@ -37,15 +37,18 @@ class XE_ACF_Plugin {
 	private 
 		$version,
 		$xeditable_version;
-		
+	
 	function __construct() {		
 		
 		$this->version = '0.2.1';
 		$this->xeditable_version = '1.4.4';
 		
+		$this->fields();
+		
 		$this->register();
 		$this->hooks();
 		$this->enqueue();
+		
 	}
 	
 	private function register() {
@@ -95,6 +98,27 @@ class XE_ACF_Plugin {
 		wp_enqueue_style('x-editable');
 		wp_enqueue_script('x-editable-wp');
 		wp_localize_script(	'x-editable-wp', 'xeditable', array( 'ajaxurl' => admin_url('admin-ajax.php') ) );	
+	}
+	
+	
+	private function fields() {
+		
+		$default_fields = array(
+			'number',
+			'textarea',
+			'select',
+			'taxonomy',
+			'date',
+		);
+		
+		$fields = apply_filters('xe/registered_fields', $default_fields);
+		
+		foreach($fields as $field) :
+			
+			include_once 'fields/' . $field . '.field.php';
+			
+		endforeach;
+		
 	}
 	
 	
@@ -189,10 +213,18 @@ class XE_ACF_Plugin {
 		
 		$tax = trim($_REQUEST['tax']); 
 		$string = $_REQUEST['string'];
+		$hide_empty = $_REQUEST['hide_empty'];
+		
+		if ( $hide_empty ) {
+			$getTermArgs = 'hide_empty=1';	
+		}
+		else {
+			$getTermArgs = 'hide_empty=0';		
+		}
 		
 		if ( ! is_null($tax) ) {
 			
-			$terms = get_terms($tax, array('hide_empty=0') );
+			$terms = get_terms($tax, $getTermArgs );
 			
 			if ( $terms ) {
 				

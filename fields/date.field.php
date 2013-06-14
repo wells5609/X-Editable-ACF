@@ -10,7 +10,9 @@ class XE_ACF_Date extends XE_ACF_Field {
 		
 		// add filters
 		add_filter('xe/external/text/type='. $this->field['type'], array($this, 'external_text'), 10, 2);
-					
+		
+		$this->set_input_type('date');
+				
 		// add other stuffs
 		$this->add_data_arg('format', 'yyyy-mm-dd');
 		$this->add_data_arg('viewformat', 'M d, yyyy');
@@ -37,11 +39,11 @@ class XE_ACF_Date extends XE_ACF_Field {
 	======================== */
 	
 	// set the input type to use (in this case, not depending on value)
-	function set_input_type() {
+	//function set_input_type() {
 		
-		$this->options['input_type'] = 'date';
+		//$this->options['input_type'] = 'date';
 		
-	}
+	//}
 	
 	// sets value and text for X-Editable element attributes
 	function set_value_and_text() {

@@ -11,7 +11,6 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 		/* parental construction */
 		parent::__construct($field_name, $object_id, $object_name);
 		
-		
 		/* Field-specific args */
 		
 		$this->add_data_arg('taxonomy', $this->field['taxonomy']);
@@ -198,6 +197,12 @@ function xe_taxonomy( $field_name, $object_id, $args = array(), $object_name = f
 	
 	if ( $input_type ) {
 		$tax->set_input_type($input_type);	
+	}
+	
+	if ( $data ) {
+		foreach($data as $d => $v) :
+			$tax->add_data_arg($d, $v);
+		endforeach;
 	}
 	
 	if ( $show_label ) {

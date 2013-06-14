@@ -1,8 +1,7 @@
 <?php
 
-class XE_ACF_Number extends XE_ACF_Field {
+class XE_ACF_Select extends XE_ACF_Field {
 	
-	var $number_decimals;
 	
 	function __construct( $field_name, $object_id, $object_name ) {
 		
@@ -10,21 +9,11 @@ class XE_ACF_Number extends XE_ACF_Field {
 		parent::__construct($field_name, $object_id, $object_name);
 			
 		/* Field-specific args */
-				
+		
 		/* Filters */
 		
 		add_filter('xe/external/text/type='. $this->field['type'], array($this, 'external_text'), 10, 2);
 		
-		/* defaults for custom vars */
-		$this->number_decimals = 2;
-				
-	}
-	
-	// custom method
-	function set_decimals($integer) {
-		
-		$this->number_decimals = $integer;
-			
 	}
 	
 	
@@ -36,9 +25,9 @@ class XE_ACF_Number extends XE_ACF_Field {
 			$return = 'Empty';
 			
 		}
-		elseif ( is_numeric($field_value) ) {
+		else {
 			
-			$return = number_format($field_value, $this->number_decimals);				
+			$return = $field_value;				
 		
 		}
 		
@@ -55,7 +44,7 @@ class XE_ACF_Number extends XE_ACF_Field {
 	// set the input type to use (in this case, not depending on value)
 	function set_input_type() {
 		
-		$this->options['input_type'] = 'number';
+		$this->options['input_type'] = 'select';
 		
 	}
 	
@@ -71,19 +60,19 @@ class XE_ACF_Number extends XE_ACF_Field {
 			$this->html['text'] = 'Edit';	
 		
 				
-		//	2.	has value
+		//	2.	Has Value
 		
 		else :
-		
+				
 			$this->html['value'] = $value;
 			
-			if ( is_numeric($value) ) {
+			if ( $this->field['choices'][$value] ) {
 				
-				$this->html['text'] = number_format($value, $this->number_decimals);
+				$this->html['text'] = $this->field['choices'][$value];
 			
 			}
 			else {
-				$this->html['text'] = $value;	
+				$this->html['text'] = $value;
 			}
 			
 		endif;
@@ -95,23 +84,38 @@ class XE_ACF_Number extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_number( $field_name, $object_id, $args = array(), $object_name = false ) {
+function xe_select( $field_name, $object_id, $args = array(), $object_name = false ) {
+	
+	$select = new XE_ACF_Select($field_name, $object_id, $object_name);
 	
 	extract($args);
 	
-	$number = new XE_ACF_Number($field_name, $object_id, $object_name);
+	if ( $data ) {
+		foreach($data as $d => $v) :
+			$select->add_data_arg($d, $v);
+		endforeach;
+	}
 	
 	if ( $show_label ) {
-		$number->show_label();	
+		$select->show_label();	
 	}
-	if ( $show_values ) {
-		$number->show_values();	
+	
+	if ( $external ) {
+		
+		if ( $edit_button ) {
+			$select->add_data_arg('external', true);
+			$select->html();
+			$select->show_values();
+		}
+		else {
+			$select->show_values();	
+			$select->html();
+		}
+		
 	}
-	// !is_null() allows us to pass 0
-	if ( !is_null($decimals) ) {
-		$number->set_decimals($decimals);
+	else {
+		$select->html();	
 	}
-	$number->html();
 	
 }
 

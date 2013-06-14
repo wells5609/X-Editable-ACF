@@ -1,10 +1,5 @@
 <?php
 
-include_once 'fields/taxonomy.field.php';
-include_once 'fields/textarea.field.php';
-include_once 'fields/date.field.php';
-include_once 'fields/number.field.php';
-
 class XE_ACF_Field {
 		
 	public
@@ -16,9 +11,7 @@ class XE_ACF_Field {
 		$html,			// (array) HTML output
 		
 		$data_args,		// (array) "data-*" HTML attributes
-		
-		$valid_input_types, // (array)
-		
+	
 		$options;		// (array) options:
 						// 	show_label		(boolean)	show a label
 						// 	show_external	(boolean)	show the field's values elsewhere
@@ -39,11 +32,12 @@ class XE_ACF_Field {
 			
 			$this->object_id = (int) $object_id;
 			
+			$this->html = array();
 			$this->data_args = array();
-			
 			$this->options = array();
-			$this->options['show_label'] = true;
-			$this->options['show_external'] = false;
+			
+			$this->set_option('show_label', true);
+			$this->set_option('show_external', false);
 			
 			if ( $object_name ) {
 				
@@ -68,145 +62,175 @@ class XE_ACF_Field {
 			
 			$this->field = get_field_object( $field, $object_id );
 			
-			$this->html = array();
-			$this->html['tag'] = 'a';
-			$this->html['css_class'] = array();
-			$this->html['label'] = $this->field['label'];
-			
-			// validate field and field_type - is this really necessary??
-			//$this->validate();
+			$this->set_html('tag', 'a');
+			$this->set_html('css_class', array());
+			$this->set_html('label', $this->field['label']);
 			
 		}
-	
-	
-	/** add_data_arg
-	 *
-	 *	@description: adds a data-* attribute via $data_args, like: data-{{$name}}="{{$value}}"
-	 *
-	**/
-		function add_data_arg( $name, $value = NULL ) {
-			
-			if ( is_array($name) ) {
-				$data = $name;
-			}
-			else {
-				$data = array( $name => $value );
-			}
-			
-			$this->data_args = array_merge($this->data_args, $data);
-			
-		}
+
 		
+	/* ============
+		SETTERS
+	============ */
+		
+			
+		/** set_html
+		 *
+		 *	@description: sets $html[$name] to $value to be used in X-Editable element
+		 *
+		**/
+			function set_html( $name, $value ) {
+				$this->html[$name] = $value;
+			}
+		
+		
+		/** set_option
+		 *
+		 *	@description: sets $html[$name] to $value to be used in X-Editable element
+		 *
+		**/
+			function set_option( $name, $value ) {
+				$this->options[$name] = $value;
+			}
+	
+	
+	/* ============
+		ADDERS
+	============ */
+		
+		/** add_data_arg
+		 *
+		 *	@description: adds a data-* attribute via $data_args, like: data-{{$name}}="{{$value}}"
+		 *
+		**/
+			
+			function add_data_arg( $name, $value = NULL ) {
+				
+				if ( is_array($name) ) {
+					$data = $name;
+				}
+				else {
+					$data = array( $name => $value );
+				}
+				
+				$this->data_args = array_merge($this->data_args, $data);
+				
+			}
+			
+			
 		/** add_data_args
 		 *
 		 *	@description: adds data-* attributes from an array of 'name' => 'value' pairs
 		 *	@uses: add_data_arg
 		 *
 		**/
+			
 			function add_data_args($args) { 
 				$this->add_data_arg( $args, NULL ); 
 			}
+			
 		
-	
-	/** set_html
-	 *
-	 *	@description: sets $html[$attribute] to $value to be used in X-Editable element
-	 *
-	**/
-		function set_html( $attribute, $value ) {
-			$this->html[$attribute] = $value;
-		}
-	
-	
-	/** add_css_class
-	 *
-	 *	@description: adds a css class if string, or several if an array
-	 *
-	**/	
-		function add_css_class( $class ) {
+		/** add_css_class
+		 *
+		 *	@description: adds a css class if string, or several if an array
+		 *
+		**/	
 			
-			if ( is_array($class) ) {
-				foreach($class as $c) :
-					$this->html['css_class'][] = $c;
-				endforeach;
-			}
-			elseif ( is_string($class) ) {
-				$this->html['css_class'][] = $class;
-			}
-		}
-		
-	
-	/** is_single_value
-	 *
-	 *	@description: does this field only have 1 value?
-	 *	@filters:
-	 *		xe/multiple_value_field_types
-	 *	
-	**/
-	
-		function is_single_value() {
-			
-			// field-types where values are NOT single
-			$multi_value_fields = array(
-				'multi-select',
-				'checkbox',
-			);
-			
-			$multi_value_fields = apply_filters('xe/field_types/multiple_values', $multi_value_fields);
-			
-			if ( isset($this->field['field_type']) && in_array( $this->field['field_type'], $multi_value_fields ) ) {
-				return false;
-			}
-			elseif ( isset($this->field['value']) && is_array($this->field['value']) ) {
-				return false;
-			}
-			elseif ( isset($this->field['multiple']) && ( (true||1) != $this->field['multiple'] ) ) {
-				return false;
-			}
-			else {
-				return true;	
-			}
-			
-		}
-	
-	
-	/** set_label
-	 *
-	 * @description: Defines label HTML.
-	 *
-	**/
-		function show_label() {
-			
-			do_action('xe/create_label', &$this->field);
+			function add_css_class( $class ) {
 				
-		}
+				if ( is_array($class) ) {
+					foreach($class as $c) :
+						$this->html['css_class'][] = $c;
+					endforeach;
+				}
+				elseif ( is_string($class) ) {
+					$this->html['css_class'][] = $class;
+				}
+			}
+		
 	
-	/** set_external
-	 *
-	 * @description: Defines external (values) HTML.
-	 *
-	**/ 
-		function show_values( $as_ul = false ) {
-			
-			do_action_ref_array('xe/create_external', array( &$this->field, &$this->html, $as_ul));
+	/* ============
+		BOOLEANS
+	============ */
+	
+		
+		/** is_single_value
+		 *
+		 *	@description: does this field only have 1 value?
+		 *	@filters:
+		 *		xe/multiple_value_field_types
+		 *	
+		**/
+		
+			function is_single_value() {
 				
-		}	
+				// field-types where values are NOT single
+				$multi_value_fields = array(
+					'multi-select',
+					'checkbox',
+				);
+				
+				$multi_value_fields = apply_filters('xe/field_types/multiple_values', $multi_value_fields);
+				
+				if ( isset($this->field['field_type']) && in_array( $this->field['field_type'], $multi_value_fields ) ) {
+					return false;
+				}
+				elseif ( isset($this->field['value']) && is_array($this->field['value']) ) {
+					return false;
+				}
+				elseif ( isset($this->field['multiple']) && ( (true||1) != $this->field['multiple'] ) ) {
+					return false;
+				}
+				else {
+					return true;	
+				}
+				
+			}
+		
 	
-		
-	/**
-	 *	@description: The element HTML output
-	 *	@actions:
-	 *		xe/before_element	
-	 *		xe/after_element
-	**/
-		
-		function html() {
-			
-			$this->setup_html();
-			
-			do_action('xe/create_element', $this->field, $this->object_id, $this->html, $this->data_args, $this->options);
+	/* ============
+		SHOW-ERS
+	============ */
+	
+	
+		/** show_label
+		 *
+		 * @description: Defines label HTML.
+		 *
+		**/
+			function show_label() {
+				
+				do_action('xe/create_label', &$this->field);
 					
-		}
+			}
+		
+		
+		/** show_values
+		 *
+		 * @description: Defines external (values) HTML.
+		 *
+		**/ 
+			function show_values( $as_ul = false ) {
+				
+				do_action_ref_array('xe/create_external', array( &$this->field, &$this->html, $as_ul));
+					
+			}	
+	
+			
+		/**
+		 *	@description: The element HTML output
+		 *	@actions:
+		 *		xe/before_element	
+		 *		xe/after_element
+		**/
+			
+			function html() {
+				
+				$this->setup_html();
+				
+				do_action('xe/create_element', $this->field, $this->object_id, $this->html, $this->data_args, $this->options);
+						
+			}
 	
 
 	/* ========================
@@ -228,7 +252,7 @@ class XE_ACF_Field {
 			
 			$this->set_source();
 			
-			$this->set_css_class();
+			$this->_css_class();
 			
 		}
 		
@@ -247,14 +271,14 @@ class XE_ACF_Field {
 		protected function set_value_and_text() {
 			
 			// Value
-			$this->html['value'] = $this->field['value'];
+			$this->set_html('value', $this->field['value']);
 			
 			// Text
 			if ( empty($this->field['value']) ) {
-				$this->html['text'] = 'Empty';
+				$this->set_html('text', 'Empty');
 			}
 			else {
-				$this->html['text'] = $this->field['value'];
+				$this->set_html('text', $this->field['value']);
 			}
 			
 		}
@@ -272,7 +296,7 @@ class XE_ACF_Field {
 		protected function set_input_type( $input_type = NULL ) {
 			
 			if ( NULL !== $input_type ) {
-				$this->options['input_type'] = $input_type;
+				$this->set_option('input_type', $input_type);
 			}
 			else {
 				
@@ -284,11 +308,11 @@ class XE_ACF_Field {
 				);
 				// if 'type' is found in the array above (as a value)
 				if ( $inputType = array_search($this->field['type'], $namedFields) ) {
-					$this->options['input_type'] = $inputType;
+					$this->set_option('input_type', $inputType);
 				}
 				// otherwise expecting filter
 				else {
-					$this->options['input_type'] = apply_filters('xe/input_type/type=' . $this->field['type'], 'text', &$this->field);
+					$this->set_option('input_type', apply_filters('xe/input_type/type=' . $this->field['type'], 'text', &$this->field) );
 				}
 			}
 			
@@ -303,17 +327,17 @@ class XE_ACF_Field {
 	 *
 	 *	NOTE: Uses field->choices if exists
 	 *
-	 *	TO-DO: Check if works (probably need json_encode somewhere)	
+	 *	TO-DO: option for 'choices' as JSON string (for typeahead)
 	**/
 	
 		protected function set_source( $source = NULL ) {
 			
 			if ( NULL !== $source ) {
-				$this->html['source'] = $source;
+				$this->set_html('source', $source);
 			}
 			
 			elseif ( isset($this->field['choices']) ) {
-				$this->html['source'] = $this->field['choices'];
+				$this->set_html('source', json_encode($this->field['choices'], JSON_FORCE_OBJECT) );
 			}
 						
 		}
@@ -325,9 +349,11 @@ class XE_ACF_Field {
 	 *		xe/html/css_class/type={{acf-type}}
 	 *
 	**/
-		private function set_css_class() {
+		private function _css_class() {
 			
-			$this->html['css_class'] = array();
+			if ( ! isset($this->html['css_class']) ) {
+				$this->html['css_class'] = array();
+			}
 			
 			$this->html['css_class'][] = 'x-editable-element';
 			$this->html['css_class'][] = 'acf-type-' . $this->field['type']; 	
@@ -344,12 +370,10 @@ class XE_ACF_Field {
 				$this->html['css_class'][] = 'values-external';	
 			}
 			
-			$this->html['css_class'] = apply_filters('xe/html/css_class/type=' . $this->field['type'], &$this->html['css_class'], &$this->field );
+			$this->set_html('css_class', apply_filters('xe/html/css_class/type=' . $this->field['type'], $this->html['css_class'], &$this->field ) );
 			
 		}
 	
-	
 }
-
 
 ?>
