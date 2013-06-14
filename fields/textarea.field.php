@@ -3,10 +3,10 @@
 class XE_ACF_Textarea extends XE_ACF_Field {
 	
 	
-	function __construct( $field_name, $object_id ) {
+	function __construct( $field_name, $object_id, $object_name ) {
 		
 		// don't remove
-		parent::__construct($field_name, $object_id);
+		parent::__construct($field_name, $object_id, $object_name);
 			
 		/* Field-specific args */
 		
@@ -81,16 +81,22 @@ class XE_ACF_Textarea extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_textarea( $field_name, $object_id, $args = array() ) {
+function xe_textarea( $field_name, $object_id, $args = array(), $object_name = false ) {
 	
 	extract($args);
 	
-	$textarea = new XE_ACF_Textarea($field_name, $object_id);
+	$textarea = new XE_ACF_Textarea($field_name, $object_id, $object_name);
+	
+	if ( $data ) {
+		foreach($data as $d => $v) :
+			$textarea->add_data_arg($d, $v);
+		endforeach;
+	}
 	
 	if ( $show_label ) {
 		$textarea->show_label();	
 	}
-	
+		
 	$textarea->show_values();	
 	
 	$textarea->html();

@@ -4,10 +4,10 @@ class XE_ACF_Number extends XE_ACF_Field {
 	
 	var $number_decimals;
 	
-	function __construct( $field_name, $object_id ) {
+	function __construct( $field_name, $object_id, $object_name ) {
 		
 		// don't remove
-		parent::__construct($field_name, $object_id);
+		parent::__construct($field_name, $object_id, $object_name);
 			
 		/* Field-specific args */
 				
@@ -100,11 +100,11 @@ class XE_ACF_Number extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_number( $field_name, $object_id, $args = array() ) {
+function xe_number( $field_name, $object_id, $args = array(), $object_name = false ) {
 	
 	extract($args);
 	
-	$number = new XE_ACF_Number($field_name, $object_id);
+	$number = new XE_ACF_Number($field_name, $object_id, $object_name);
 	
 	if ( $show_label ) {
 		$number->show_label();	

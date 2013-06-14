@@ -20,10 +20,9 @@ class XE_ACF_Field {
 		$valid_input_types, // (array)
 		
 		$options;		// (array) options:
-						// 		show_label		(boolean)	show a label
-						// 		show_external	(boolean)	show the field's values elsewhere
-						//		input_type		(string)	input type to use
-		
+						// 	show_label		(boolean)	show a label
+						// 	show_external	(boolean)	show the field's values elsewhere
+						//	input_type		(string)	input type to use
 		
 				
 	/** __construct
@@ -34,12 +33,26 @@ class XE_ACF_Field {
 	 *		html defaults
 	 *		...stuff
 	 *	
-	 *	Validates type and field type
-	 *
 	**/
 	
-		function __construct( $field_name, $object_id ) {
+		function __construct( $field_name, $object_id, $object_name = false ) {
 			
+			$this->object_id = (int) $object_id;
+			
+			$this->data_args = array();
+			
+			$this->options = array();
+			$this->options['show_label'] = true;
+			$this->options['show_external'] = false;
+			
+			if ( $object_name ) {
+				
+				$object_id = $object_name . '_' . $object_id;
+								
+				$this->add_data_arg('object_name', $object_name);
+			
+			}
+						
 			// user defined get_field_key function
 			if ( function_exists('get_field_key') ) {
 				$field = get_field_key($field_name);			
@@ -53,15 +66,7 @@ class XE_ACF_Field {
 				exit('Could not find field reference for ' . $field_name . '. Define and return via get_field_key() function.');	
 			}
 			
-			$this->object_id = (int) $object_id;
-			
 			$this->field = get_field_object( $field, $object_id );
-			
-			$this->data_args = array();
-			
-			$this->options = array();
-			$this->options['show_label'] = true;
-			$this->options['show_external'] = false;
 			
 			$this->html = array();
 			$this->html['tag'] = 'a';
@@ -159,7 +164,6 @@ class XE_ACF_Field {
 				return false;
 			}
 			else {
-				$this->options['single_value'] = true;
 				return true;	
 			}
 			

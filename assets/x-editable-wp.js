@@ -1,35 +1,19 @@
-jQuery(document).ready(function() { 
-	
-	/*
-	jQuery('#focus-list-submit').submit( function() {
-		
-		var values = jQuery(#form_id_to_target).serialize();
-		
-		// then send values (i.e. data: values) with dataType: 'json'
-			
-	});
-	
-	jQuery.find('input.focus-list-checkbox').each( function() {
-			
-		ids.push(jQuery(this).attr('data-post_id'));
-			
-	});
-		
-	var result = ids.join(',');
-		
-	$(this).attr('value', result);
-	
-	*/	
+jQuery(document).ready(function() {
 	
 	jQuery('.x-editable-element').each( function() {
 	
+		var action = "xeditable_meta_handler";
+		var nonce = jQuery(this).data('nonce');	
+		
 		var inputType = jQuery(this).data('type');
 		var acfType = jQuery(this).data('acf_type');
-		var nonce = jQuery(this).data('nonce');
-				
-		var action = "xeditable_meta_handler";
-	
-
+		
+		// used for success callbacks
+		var name = jQuery(this).data('name');
+		var objectId = jQuery(this).data('pk');
+		var objectName = jQuery(this).data('object_name');
+		
+		
 		// datepicker input
 		if ( inputType == 'date' ) {
 			
@@ -37,14 +21,9 @@ jQuery(document).ready(function() {
 				url: xeditable.ajaxurl,
 				params: {
 					action: action,
-					nonce: nonce
+					nonce: nonce,
+					object_name: objectName,
 				},
-				// datepicker options
-				format: 'yyyy-mm-dd',
-				viewformat: 'M d, yyyy',
-				datepicker: {
-					weekStart: 0
-				}
 			});		
 		
 		}
@@ -52,19 +31,16 @@ jQuery(document).ready(function() {
 		// TEXTAREA inputs
 		else if ( inputType == 'textarea' ) {
 			
-			// set success function vars
-			var objectId = jQuery(this).data('pk');
-			var name = jQuery(this).data('name');
-			
 			jQuery(this).editable({
 				url: xeditable.ajaxurl,
 				params: {
 					action: action,
 					nonce: nonce,
 					acf_type: acfType,
+					object_name: objectName,
 				},
 				success: function() { 
-					load_xe_field(objectId, name, jQuery('html').find( '#' + name + '-content' ) )
+					load_xe_field(objectId, name, jQuery('html').find( '#' + name + '-content' ), objectName )
 				}	
 			});
 			
@@ -83,7 +59,7 @@ jQuery(document).ready(function() {
 			}
 			
 			// set success function vars
-			if ( jQuery(this).hasClass('values-external') ) {
+			if ( jQuery(this).data('external') == 1 ) {
 				var into = jQuery('html').find( '#' + name + '-content' );
 				var asUl = true;
 			} else { 
@@ -96,7 +72,8 @@ jQuery(document).ready(function() {
 					action: 'xeditable_acf_taxonomy',
 					nonce: nonce,
 					issingle: singleValue,
-					tax: tax
+					tax: tax,
+					object_name: objectName,
 				},
 				display: false,
 				source: xeditable.ajaxurl+'?action=xeditable_tax_options&tax='+tax,
@@ -123,7 +100,7 @@ jQuery(document).ready(function() {
 					nonce: nonce,
 					acf_type: acfType,
 					issingle: singleValue,
-					//something
+					object_name: objectName,
 				},
 				source: xeditable.ajaxurl+'?action=xeditable_user_options&role='+userRole,
 				
@@ -139,6 +116,7 @@ jQuery(document).ready(function() {
 					action: action,
 					nonce: nonce,
 					acf_type: acfType,
+					object_name: objectName,
 				}	
 			});	
 		
@@ -147,75 +125,9 @@ jQuery(document).ready(function() {
 			
 	});
 	
-	
-	jQuery('.x-editable-tax').each( function() {
 		
-		var action = "xeditable_tax_handler";
-		
-		var inputType = jQuery(this).data('type');
-		var nonce = jQuery(this).data('nonce');		
-		var name = jQuery(this).data('name');
-		var object_id = jQuery(this).data('pk');
-				
-		if (jQuery(this).hasClass('single-value')) {
-			var issingle = true;
-		}
-		if ( 'typeahead' == inputType ) {
-
-			jQuery(this).editable({
-				url: xeditable.ajaxurl, 
-				params: {
-					action: action,
-					nonce: nonce,
-					issingle: issingle
-				},
-				autotext: 'never',
-				display: false,
-				// define select options
-				source: xeditable.ajaxurl+'?action=xeditable_tax_options&string=true&tax='+name,
-				success: function() { 
-					if ( jQuery(this).hasClass('values-external') ) {
-						var into = jQuery('html').find( '#'+name+'-content' );
-						load_xe_terms(object_id, tax, into);
-					}
-					else {
-						var into = jQuery(this);
-						load_xe_terms_inline(object_id, name, into);
-					}
-				}
-			});	
-			
-		}
-		else {
-							
-			jQuery(this).editable({
-				url: xeditable.ajaxurl, 
-				params: {
-					action: action,
-					nonce: nonce,
-					issingle: issingle
-				},
-				display: false,
-				// define select options
-				source: xeditable.ajaxurl+'?action=xeditable_tax_options&tax='+name,
-				success: function() { 
-					if ( jQuery(this).hasClass('values-external') ) {
-						var into = jQuery('html').find( '#'+name+'-content' );
-						load_xe_terms(object_id, name, into);
-					}
-					else {
-						var into = jQuery(this);
-						load_xe_terms_inline(object_id, name, into);
-					}
-				}
-			});	
-		
-		}
-		
-	});
-	
 	// AJAX Post Meta loader function
-	function load_xe_field(post_id, field, into) {
+	function load_xe_field(post_id, field, into, objName) {
 		
 		jQuery.ajax({
 			type: 'POST',
@@ -223,7 +135,8 @@ jQuery(document).ready(function() {
 			data: {
 				action: 'xeditable_meta_load',
 				field: field,
-				post_id: post_id
+				post_id: post_id,
+				object_name: objName,
 			},
 			success: function(data, textStatus, XMLHttpRequest){
 				jQuery(into).html(data);	
@@ -240,23 +153,7 @@ jQuery(document).ready(function() {
 				action: 'xeditable_term_load',
 				tax: tax,
 				object_id: object_id,
-				as_ul: ul
-			},
-			success: function(data, textStatus, XMLHttpRequest){
-				jQuery(into).html(data);	
-			}
-		});	
-	}
-	
-	function load_xe_terms_inline(object_id, tax, into) {
-		jQuery.ajax({
-			type: 'POST',
-			url: xeditable.ajaxurl,
-			data: {
-				action: 'xeditable_term_load',
-				tax: tax,
-				object_id: object_id,
-				inline: 'true'
+				as_ul: ul,
 			},
 			success: function(data, textStatus, XMLHttpRequest){
 				jQuery(into).html(data);	

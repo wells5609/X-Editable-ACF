@@ -6,10 +6,10 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 	var $valid_inputs;
 	
 	
-	function __construct( $field_name, $object_id ) {
+	function __construct( $field_name, $object_id, $object_name ) {
 		
 		/* parental construction */
-		parent::__construct($field_name, $object_id);
+		parent::__construct($field_name, $object_id, $object_name);
 		
 		
 		/* Field-specific args */
@@ -190,23 +190,37 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_taxonomy( $field_name, $object_id, $args = array() ) {
+function xe_taxonomy( $field_name, $object_id, $args = array(), $object_name = false ) {
 	
-	$tax = new XE_ACF_Taxonomy($field_name, $object_id);
+	$tax = new XE_ACF_Taxonomy($field_name, $object_id, $object_name);
 	
 	extract($args);
 	
-	if ( $show_label )
-		$tax->show_label();	
-	
-	if ( $show_external )
-		$tax->show_values(true);	
-		
-	if ( $input_type )
+	if ( $input_type ) {
 		$tax->set_input_type($input_type);	
-		
-	$tax->html();
+	}
 	
+	if ( $show_label ) {
+		$tax->show_label();	
+	}
+	
+	if ( $external ) {
+		
+		if ( $edit_button ) {
+			$tax->add_data_arg('external', true);
+			$tax->html();
+			$tax->show_values($values_as_ul);
+		}
+		else {
+			$tax->show_values($values_as_ul);	
+			$tax->html();
+		}
+		
+	}
+	else {
+		$tax->html();	
+	}
+		
 }
 
 

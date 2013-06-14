@@ -3,7 +3,7 @@
 Plugin Name: X-Editable ACF
 Plugin URI: 
 Description: Edit ACF from the front end using X-Editable.
-Version: 0.1
+Version: 0.2.1
 Author: Wells Peterson
 Author URI: http://wellspeterson.com/
 License: GPL
@@ -40,7 +40,7 @@ class XE_ACF_Plugin {
 		
 	function __construct() {		
 		
-		$this->version = '0.2';
+		$this->version = '0.2.1';
 		$this->xeditable_version = '1.4.4';
 		
 		$this->register();
@@ -289,8 +289,13 @@ class XE_ACF_Plugin {
 		
 		$post_id = $_REQUEST['post_id'];
 		$field = $_REQUEST['field'];
+		$object_name = $_REQUEST['object_name'];
 		
 		if (function_exists('get_field')) {
+			// Prefix object_id with object type (taxonomy name, etc.)
+			if ( $object_name ) {
+				$post_id = $object_name . '_' . $post_id;
+			}
 			$value = get_field($field, $post_id);	
 		}
 		else {
@@ -310,6 +315,7 @@ class XE_ACF_Plugin {
 		$name = trim($_POST['name']); // the ACF field key
 		$value = $_POST['value']; // uses "data-value" if present, otherwise html contents.
 		$acf_type = $_POST['acf_type'];
+		$object_name = $_POST['object_name']; // if we're editing Term, User, etc. (not set for Post)
 			   
 		// nonce must match name.
 		if ( ! wp_verify_nonce( $_POST['nonce'], $name )) {
@@ -322,6 +328,13 @@ class XE_ACF_Plugin {
 		if ( ! is_null($value) ) {
 						
 			if (function_exists('update_field')) {
+				
+				// Prefix object_id with object type (taxonomy name, etc.)
+				if ( $object_name ) {
+					
+					$object_id = $object_name . '_' . $object_id;	
+				
+				}
 				
 				if ( is_array($value) ) {
 					
@@ -336,11 +349,13 @@ class XE_ACF_Plugin {
 				}
 				elseif ( 'user' == $acf_type ) {
 					
-					update_field($name, array($value), $object_id);	
+					update_field( $name, array($value), $object_id );	
+				
 				}
 				else {
 					update_field( $name, $value, $object_id );
 				}
+			
 			}
 			else {
 				
@@ -357,7 +372,7 @@ class XE_ACF_Plugin {
 				}
 			}
 			
-			print_r($_POST);	
+			print_r($_POST); // debug response
 		
 		}
 		else {

@@ -3,10 +3,10 @@
 class XE_ACF_Date extends XE_ACF_Field {
 	
 	
-	function __construct( $field_name, $object_id ) {
+	function __construct( $field_name, $object_id, $object_name ) {
 		
 		// don't remove
-		parent::__construct($field_name, $object_id);
+		parent::__construct($field_name, $object_id, $object_name);
 		
 		// add filters
 		add_filter('xe/external/text/type='. $this->field['type'], array($this, 'external_text'), 10, 2);
@@ -71,9 +71,9 @@ class XE_ACF_Date extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_date( $field_name, $object_id, $args = array() ) {
+function xe_date( $field_name, $object_id, $args = array(), $object_name = false ) {
 	
-	$date = new XE_ACF_Date($field_name, $object_id);
+	$date = new XE_ACF_Date($field_name, $object_id, $object_name);
 	
 	extract($args);
 	
