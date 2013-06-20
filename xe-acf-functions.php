@@ -5,18 +5,20 @@ class XE_ACF_Functions {
 	
 	public static function init() {
 		
+		add_action( 'xe/register_field', array('XE_ACF_Functions', 'register_field'), 10, 2 );
+		
 		if ( ! has_action('xe/create_external', array('XE_ACF_Functions', 'create_external')) ) {
 			
 			add_action( 'xe/create_external', array('XE_ACF_Functions', 'create_external'), 5, 3);
 		
 		}
 		
-		add_action( 'xe/create_element', array('XE_ACF_Functions', 'create_element'), 5, 5);
+		add_action( 'xe/create_element', array('XE_ACF_Functions', 'create_element'), 5, 4);
 		
 		add_action( 'xe/create_label', array('XE_ACF_Functions', 'create_label'), 5, 1);
 		
 	}
-	
+		
 	
 	public static function create_external( $field, $html, $as_ul ) {
 		
@@ -106,7 +108,7 @@ class XE_ACF_Functions {
 		
 	}
 		
-	public static function create_element( $field, $object_id, $html, $data_args, $options ) {
+	public static function create_element( $field, $object_id, $html, $options ) {
 		
 		$echo = '';
 				
@@ -149,8 +151,8 @@ class XE_ACF_Functions {
 		}
 		
 		//	user-defined data-* options
-		if ( isset($data_args) ) {
-			foreach ($data_args as $data_option => $data_value) :
+		if ( isset($html['data_args']) ) {
+			foreach ($html['data_args'] as $data_option => $data_value) :
 				$echo .= 'data-' . $data_option . '="' . esc_attr($data_value) . '" ';
 			endforeach;
 		}
@@ -160,7 +162,7 @@ class XE_ACF_Functions {
 		//	TEXT
 		
 		// if display values externally, change edit text to (default) "Edit" (fields can filter)
-		if ( isset($data_args) && in_array('external', $data_args) ) {
+		if ( isset($html['data_args']) && in_array('external', $html['data_args']) ) {
 			$echoText = apply_filters('xe/element/html/text/external/type=' . $field['type'], 'Edit <br>', $field);
 		}
 		else {

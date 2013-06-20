@@ -38,13 +38,6 @@ class XE_ACF_Date extends XE_ACF_Field {
 		(from parent class)
 	======================== */
 	
-	// set the input type to use (in this case, not depending on value)
-	//function set_input_type() {
-		
-		//$this->options['input_type'] = 'date';
-		
-	//}
-	
 	// sets value and text for X-Editable element attributes
 	function set_value_and_text() {
 		
@@ -53,16 +46,16 @@ class XE_ACF_Date extends XE_ACF_Field {
 		//	1.	Empty value
 		
 		if ( empty($value) ) :
-			$this->html['value'] = '';
-			$this->html['text'] = 'Empty';	
+			$this->set_html('value', '');
+			$this->set_html('text', '<em>Empty</em>');	
 		
 				
 		//	2.	Values
 		
 		else :
-		
-			$this->html['value'] = $this->field['value'];
-			$this->html['text'] = $this->field['value'];
+			
+			$this->set_html('value', $value);
+			$this->set_html('text', $value);	
 		
 		endif;
 		
@@ -79,11 +72,17 @@ function xe_date( $field_name, $object_id, $args = array(), $object_name = false
 	
 	extract($args);
 	
+	if ( $data ) {
+		foreach($data as $d => $v) :
+			$date->add_data_arg($d, $v);
+		endforeach;
+	}
+	
 	if ( $show_label )
 		$date->show_label();	
 
 	if ( $show_values ) 
-		$date->show_values(false);
+		$date->show_values(false); // don't use ul
 	
 	$date->html();
 	

@@ -22,21 +22,21 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 			'select',
 		);
 		// hook yourself
-		$this->valid_inputs = apply_filters('xe/valid_inputs/type='.$this->field['type'], $valid_inputs, &$this->field);
+		$this->valid_inputs = apply_filters('xe/valid_inputs/type='.$this->field['type'], $valid_inputs, $this->field);
 		
 		
 		/* Filters */
 			
-			// return format determines text 
-			$format = $this->field['return_format'];
+		// return format determines text 
+		$format = $this->field['return_format'];
+	
+		if ( 'id' === $format ) {
+			add_filter('xe/external/text/type='. $this->field['type'] .'/format=id', array($this, 'external_text_id'), 10, 2);
+		}
 		
-			if ( 'id' === $format ) {
-				add_filter('xe/external/text/type='. $this->field['type'] .'/format=id', array($this, 'external_text_id'), 10, 2);
-			}
-			
-			elseif ( 'object' === $format ) {
-				add_filter('xe/external/text/type='. $this->field['type'] .'/format='. $format, array($this, 'external_text_'. $format), 10, 2);
-			}
+		elseif ( 'object' === $format ) {
+			add_filter('xe/external/text/type='. $this->field['type'] .'/format='. $format, array($this, 'external_text_'. $format), 10, 2);
+		}
 		
 	}
 	
@@ -101,13 +101,23 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 	// set the input type to use, depending on value
 	// 		OR use your own custom defaults.
 	// this is just illustrative
-	function set_input_type() {
+	function set_input_type( $input = NULL) {
 		
-		if ( is_array($this->field['value']) ) {
-			$this->options['input_type'] = $this->valid_inputs[0]; // checklist
+		if ( NULL !== $input && in_array($input, $this->valid_inputs) ) {
+
+			$this->set_option('input_type', $input);	
+	
 		}
 		else {
-			$this->options['input_type'] = 'select';	
+			
+			if ( $this->is_single_value() || ( isset($this->field['value']) && ! is_array($this->field['value']) ) ) {
+				$this->set_option('input_type', 'select');	
+			}
+			
+			else {
+				$this->set_option('input_type', $this->valid_inputs[0]); // checklist
+			}
+			
 		}
 		
 	}
@@ -121,10 +131,11 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 		//	1.	Empty value
 		
 		if ( empty($value) ) :
-			$this->html['value'] = '';
-			$this->html['text'] = 'Empty';	
 		
-				
+			$this->set_html('value', '');
+			$this->set_html('text', '<em>Empty</em>');		
+						
+		
 		//	2.	Multiple Values
 		
 		elseif ( is_array($value) ) :
@@ -154,8 +165,8 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 
 			endforeach;
 			
-			$this->html['value'] = implode(',', $valueArray);
-			$this->html['text'] = implode(', ', $textArray);
+			$this->set_html('value', implode(',', $valueArray));
+			$this->set_html('text', implode(', ', $textArray));
 			
 			
 		//	3.	One value
@@ -164,20 +175,20 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 			
 			if ( 'object' === $format ) {
 				
-				$this->html['value'] = $value->term_id;
-				$this->html['text'] = $value->name;
+				$this->set_html('value', $value->term_id);
+				$this->set_html('text', $value->name);
 				
 			}
 			elseif ( 'id' === $format ) {
 				
 				$term = get_term_by('id', $value, $this->field['taxonomy']);
 				
-				$this->html['value'] = $value;
-				$this->html['text'] = $term->name;
+				$this->set_html('value', $value);
+				$this->set_html('text', $term->name);
 				
 			}
 			else {
-				$this->html['text'] = 'Something went horribly wrong.';		
+				$this->set_html('text', 'Something went horribly wrong.');		
 			}
 
 		endif;

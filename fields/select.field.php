@@ -10,6 +10,8 @@ class XE_ACF_Select extends XE_ACF_Field {
 			
 		/* Field-specific args */
 		
+		$this->set_input_type('select');
+		
 		/* Filters */
 		
 		add_filter('xe/external/text/type='. $this->field['type'], array($this, 'external_text'), 10, 2);
@@ -21,14 +23,10 @@ class XE_ACF_Select extends XE_ACF_Field {
 	function external_text( $field_value, $field ) {
 		
 		if ( empty($field_value) ) {
-			
 			$return = 'Empty';
-			
 		}
 		else {
-			
-			$return = $field_value;				
-		
+			$return = $field_value;
 		}
 		
 		return $return;
@@ -41,12 +39,6 @@ class XE_ACF_Select extends XE_ACF_Field {
 		(from parent class)
 	======================== */
 	
-	// set the input type to use (in this case, not depending on value)
-	function set_input_type() {
-		
-		$this->options['input_type'] = 'select';
-		
-	}
 	
 	// sets value and text for X-Editable element attributes
 	function set_value_and_text() {
@@ -56,23 +48,23 @@ class XE_ACF_Select extends XE_ACF_Field {
 		//	1.	Empty value
 		
 		if ( empty($value) ) :
-			$this->html['value'] = '';
-			$this->html['text'] = 'Edit';	
+			$this->set_html('value', '');
+			$this->set_html('text', 'Edit');	
 		
 				
 		//	2.	Has Value
 		
 		else :
 				
-			$this->html['value'] = $value;
+			$this->set_html('value', $value);
 			
 			if ( $this->field['choices'][$value] ) {
 				
-				$this->html['text'] = $this->field['choices'][$value];
+				$this->set_html('text', $this->field['choices'][$value]);
 			
 			}
 			else {
-				$this->html['text'] = $value;
+				$this->set_html('text', $value);
 			}
 			
 		endif;

@@ -2,15 +2,15 @@
 /*
 Plugin Name: X-Editable ACF
 Plugin URI: https://github.com/wells5609/X-Editable-ACF
-Description: Edit ACF from the front end using X-Editable.
-Version: 0.2.2
+Description: Edit Advanced Custom Fields from the front-end using X-Editable.
+Version: 0.3.0
 Author: Wells Peterson
 License: GPL
 Copyright: Wells Peterson
 */
 
 /**
-* Setup the WP X-Editable plugin
+* Setup the X-Editable-ACF plugin
 *
 * Use add_theme_support( 'x-editable-acf' ); in theme functions.php to enable.
 */
@@ -23,6 +23,10 @@ function x_editable_acf() {
 		return false;
 	}
 	
+	if ( ! current_user_can('edit_posts') ) {
+		return;	
+	}
+	
 	require_once 'fields/xe-acf-field.php';
 	
 	require_once 'xe-acf-functions.php';
@@ -33,32 +37,37 @@ function x_editable_acf() {
 
 // Plugin class
 class XE_ACF_Plugin {
+	
+	public $user_fields;
 
 	private 
-		$version,
-		$xeditable_version;
+		$version = '0.3.0',
+		$xeditable_version = '1.4.4';
 	
 	function __construct() {		
 		
-		$this->version = '0.2.1';
-		$this->xeditable_version = '1.4.4';
+		$this->user_fields = array();
 		
-		$this->fields();
-		
-		$this->register();
 		$this->hooks();
-		$this->enqueue();
+		
+		$this->register_scripts();
+				
+		$this->default_fields();
+		
+		$this->user_fields();
+		
+		$this->enqueue_scripts();
 		
 	}
 	
-	private function register() {
+	private function register_scripts() {
 		
 		// Bootstrap editable css
 		wp_register_style('x-editable', plugins_url( 'assets/bootstrap-editable.min.css' , __FILE__ ), array('bootstrap'), $this->xeditable_version );
 		// Bootstrap editable js
 		wp_register_script('x-editable', plugins_url( 'assets/bootstrap-editable.min.js' , __FILE__ ), array('jquery', 'bootstrap-js'), $this->xeditable_version, true );
 		// X-Editable WP
-		wp_register_script('x-editable-wp', plugins_url('assets/x-editable-wp.js', __FILE__ ), array('jquery', 'x-editable'), $this->version, true );
+		wp_register_script('x-editable-acf', plugins_url('assets/x-editable-acf.js', __FILE__ ), array('jquery', 'x-editable'), $this->version, true );
 		
 	}
 	
@@ -94,14 +103,14 @@ class XE_ACF_Plugin {
 			
 	}
 	
-	private function enqueue() {
+	private function enqueue_scripts() {
 		wp_enqueue_style('x-editable');
-		wp_enqueue_script('x-editable-wp');
-		wp_localize_script(	'x-editable-wp', 'xeditable', array( 'ajaxurl' => admin_url('admin-ajax.php') ) );	
+		wp_enqueue_script('x-editable-acf');
+		wp_localize_script(	'x-editable-acf', 'xeditable', array( 'ajaxurl' => admin_url('admin-ajax.php') ) );	
 	}
 	
 	
-	private function fields() {
+	private function default_fields() {
 		
 		$default_fields = array(
 			'number',
@@ -109,15 +118,33 @@ class XE_ACF_Plugin {
 			'select',
 			'taxonomy',
 			'date',
+			'true_false',
+			'user',
 		);
 		
-		$fields = apply_filters('xe/registered_fields', $default_fields);
-		
-		foreach($fields as $field) :
+		foreach($default_fields as $field) :
 			
 			include_once 'fields/' . $field . '.field.php';
 			
 		endforeach;
+		
+	}
+	
+	private function user_fields() {
+		
+		$default_path = get_stylesheet_directory() . '/fields/';
+		
+		$this->user_fields = apply_filters('xe/user_fields', $this->user_fields);
+		
+		foreach($this->user_fields as $field) :
+			
+			$default_location = $default_path . $field .'.field.php';
+			
+			$file_location = apply_filters('xe_' . $field . '_field_path', $default_location);
+			
+			include_once $file_location;
+			
+		endforeach;	
 		
 	}
 	

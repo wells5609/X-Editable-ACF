@@ -4,19 +4,25 @@ class XE_ACF_Field {
 		
 	public
 
-		$object_id,		// (int) queried object ID
+		$object_id,				/*	(int) queried object ID	*/
+			
+		$field,					/** (array) ACF field object
+								 *		type, field_type, value, etc.
+								**/
 		
-		$field,			// (array) ACF field
-		
-		$html,			// (array) HTML output
-		
-		$data_args,		// (array) "data-*" HTML attributes
-	
-		$options;		// (array) options:
-						// 	show_label		(boolean)	show a label
-						// 	show_external	(boolean)	show the field's values elsewhere
-						//	input_type		(string)	input type to use
-		
+		$html = array(),		/**	(array) HTML output:
+								 *		tag			(string)	HTML tag to use (default 'a')
+								 *		text		(string)	text to display
+								 *		value		(string)	value for data-value
+								 *		css_class	(array)		CSS classes for element
+								 *		data_args	(array)		data-* attributes
+								**/
+								
+		$options = array();		/** (array) options:
+								 * 		show_label		(boolean)	show a label before the element
+								 * 		show_external	(boolean)	show the field's values externally (ie outside the editable element)
+								 *		input_type		(string)	input type to use
+								**/
 				
 	/** __construct
 	 *
@@ -32,21 +38,21 @@ class XE_ACF_Field {
 			
 			$this->object_id = (int) $object_id;
 			
-			$this->html = array();
-			$this->data_args = array();
-			$this->options = array();
+			$this->set_html('tag', 'a');
+			$this->set_html('css_class', array());
+			$this->set_html('data_args', array());
+			
+			
+			// object_name? prefix ID for rest of functions AFTER setting var
+			if ( $object_name ) {
+				$object_id = $object_name . '_' . $object_id;
+				$this->add_data_arg('object_name', $object_name);
+			}
 			
 			$this->set_option('show_label', true);
 			$this->set_option('show_external', false);
-			
-			if ( $object_name ) {
-				
-				$object_id = $object_name . '_' . $object_id;
-								
-				$this->add_data_arg('object_name', $object_name);
-			
-			}
-						
+			$this->set_option('restrict_choices', false);
+									
 			// user defined get_field_key function
 			if ( function_exists('get_field_key') ) {
 				$field = get_field_key($field_name);			
@@ -62,17 +68,72 @@ class XE_ACF_Field {
 			
 			$this->field = get_field_object( $field, $object_id );
 			
-			$this->set_html('tag', 'a');
-			$this->set_html('css_class', array());
 			$this->set_html('label', $this->field['label']);
 			
 		}
 
 		
 	/* ============
-		SETTERS
+		MAGIC
 	============ */
+	
+			
+		/** __get
+		 *
+		 *	@description: Gets a variable value.
+		 *
+		**/
+			function __get($variable) {
+				return $this->$variable;
+			}
 		
+		
+		/** __set
+		 *	
+		 *	@description: Sets a variable value.
+		 *
+		**/
+			function __set($variable, $value) {
+				$this->$variable = $value;
+			}
+			
+		/** __isset
+		 *
+		 *	@description: checks if a variable is set, returns true or false.
+		 *
+		**/
+			function __isset($variable) {
+				if ( isset($this->$variable) && ! empty($this->$variable) ) {
+					return true;
+				}
+				else {
+					return false;	
+				}
+			}
+						
+				
+	/* =============
+		"API"
+	============= */
+		
+		/** get_{{variable}}
+		 *	
+		 *	@description: Return the value of array variable given a key.
+		 *
+		**/
+			function get_field($key) {
+				return $this->field[$key];
+			}
+			function get_html($key) {
+				return $this->html[$key];
+			}
+			function get_option($key) {
+				return $this->options[$key];
+			}
+			function get_data_arg($key) {
+				return $this->html['data_args'][$key];
+			}
+				
 			
 		/** set_html
 		 *
@@ -86,68 +147,48 @@ class XE_ACF_Field {
 		
 		/** set_option
 		 *
-		 *	@description: sets $html[$name] to $value to be used in X-Editable element
+		 *	@description: sets $options[$name] to $value to be used in X-Editable element
 		 *
 		**/
 			function set_option( $name, $value ) {
 				$this->options[$name] = $value;
 			}
 	
-	
-	/* ============
-		ADDERS
-	============ */
+		
 		
 		/** add_data_arg
 		 *
 		 *	@description: adds a data-* attribute via $data_args, like: data-{{$name}}="{{$value}}"
 		 *
 		**/
-			
 			function add_data_arg( $name, $value = NULL ) {
-				
 				if ( is_array($name) ) {
-					$data = $name;
+					foreach($name as $k => $v) :
+						$this->html['data_args'][$k] = $v;
+					endforeach;
 				}
 				else {
-					$data = array( $name => $value );
+					$this->html['data_args'][$name] = $value;
 				}
-				
-				$this->data_args = array_merge($this->data_args, $data);
-				
 			}
-			
-			
-		/** add_data_args
-		 *
-		 *	@description: adds data-* attributes from an array of 'name' => 'value' pairs
-		 *	@uses: add_data_arg
-		 *
-		**/
-			
-			function add_data_args($args) { 
-				$this->add_data_arg( $args, NULL ); 
-			}
-			
+		
 		
 		/** add_css_class
 		 *
 		 *	@description: adds a css class if string, or several if an array
 		 *
-		**/	
-			
+		**/
 			function add_css_class( $class ) {
-				
 				if ( is_array($class) ) {
 					foreach($class as $c) :
 						$this->html['css_class'][] = $c;
 					endforeach;
 				}
-				elseif ( is_string($class) ) {
+				else {
 					$this->html['css_class'][] = $class;
 				}
 			}
-		
+			
 	
 	/* ============
 		BOOLEANS
@@ -156,9 +197,9 @@ class XE_ACF_Field {
 		
 		/** is_single_value
 		 *
-		 *	@description: does this field only have 1 value?
+		 *	@description: does this field only have 1 value? <- answers that question
 		 *	@filters:
-		 *		xe/multiple_value_field_types
+		 *		xe/field_types/multiple_values
 		 *	
 		**/
 		
@@ -175,12 +216,14 @@ class XE_ACF_Field {
 				if ( isset($this->field['field_type']) && in_array( $this->field['field_type'], $multi_value_fields ) ) {
 					return false;
 				}
+				
 				elseif ( isset($this->field['value']) && is_array($this->field['value']) ) {
 					return false;
 				}
 				elseif ( isset($this->field['multiple']) && ( (true||1) != $this->field['multiple'] ) ) {
 					return false;
 				}
+				
 				else {
 					return true;	
 				}
@@ -188,14 +231,14 @@ class XE_ACF_Field {
 			}
 		
 	
-	/* ============
+	/* ================
 		SHOW-ERS
-	============ */
+	================ */
 	
 	
 		/** show_label
 		 *
-		 * @description: Defines label HTML.
+		 *	@description: Shows a label.
 		 *
 		**/
 			function show_label() {
@@ -207,7 +250,7 @@ class XE_ACF_Field {
 		
 		/** show_values
 		 *
-		 * @description: Defines external (values) HTML.
+		 *	@description: Shows values externally.
 		 *
 		**/ 
 			function show_values( $as_ul = false ) {
@@ -217,19 +260,25 @@ class XE_ACF_Field {
 			}	
 	
 			
-		/**
+		/**	html
+		 *
 		 *	@description: The element HTML output
-		 *	@actions:
-		 *		xe/before_element	
-		 *		xe/after_element
+		 *
 		**/
 			
 			function html() {
 				
-				$this->setup_html();
+				$this->set_value_and_text();
 				
-				do_action('xe/create_element', $this->field, $this->object_id, $this->html, $this->data_args, $this->options);
-						
+				if ( empty($this->options['input_type'])) {
+					$this->set_input_type();
+				}
+				
+				$this->setup_source();
+				$this->setup_css_class();
+				
+				do_action('xe/create_element', $this->field, $this->object_id, $this->html, $this->options);
+			
 			}
 	
 
@@ -238,141 +287,163 @@ class XE_ACF_Field {
 	======================== */
 	
 	
-	/**	setup_html
-	 *
-	 *	@description: Sets up HTML for element: CSS classes, values/output, source.
-	 *		Adds actions to print label/external if set	
-	**/
-	
-		function setup_html() {
-			
-			$this->set_value_and_text();
-			
-			$this->set_input_type();
-			
-			$this->set_source();
-			
-			$this->_css_class();
-			
-		}
-		
-	
 	/**	set_value_and_output
 	 *
-	 *	@description: sets html_value and html_display vars and applies filters
-	 *	@filters:
-	 *		xe/html/value
-	 *		xe/html/value/type={{acf-type}}
-	 * 		xe/html/text
-	 *		xe/html/text/type={{acf-type}}
+	 *	@description: sets html_value and html_display vars
+	 *
+	 *	Most fields should overwrite this function
 	 *
 	**/
 		
 		protected function set_value_and_text() {
 			
-			// Value
-			$this->set_html('value', $this->field['value']);
-			
-			// Text
-			if ( empty($this->field['value']) ) {
-				$this->set_html('text', 'Empty');
+			// Has return_format
+			if ( $this->field['return_format'] ) {
+				
+				// Value
+				
+				$this->set_html('value', apply_filters('xe/html/value/type=' . $this->field['type'] . '/format=' . $this->field['return_format'], $this->field['value']));				
+				
+				// Text
+				
+				if ( empty($this->field['value']) ) {
+					$this->set_html('text', apply_filters('xe/html/text/type=' . $this->field['type'] . '/format=' . $this->field['return_format'], '<em>Empty</em>'));
+				}
+				else {
+					$this->set_html('text', apply_filters('xe/html/text/type=' . $this->field['type'] . '/format=' . $this->field['return_format'], $this->field['value']));				
+				}
+				
 			}
+			
+			// no return format
 			else {
-				$this->set_html('text', $this->field['value']);
+				
+				// Value
+				
+				$this->set_html('value', apply_filters('xe/html/value/type=' . $this->field['type'], $this->field['value']));
+				
+				// Text
+				
+				if ( empty($this->field['value']) ) {
+					$this->set_html('text', apply_filters('xe/html/text/type=' . $this->field['type'], '<em>Empty</em>'));
+				}
+				else {
+					$this->set_html('text', apply_filters('xe/html/text/type=' . $this->field['type'], $this->field['value']));				
+				}
+				
 			}
-			
+					
 		}
 	
 	
-	/** determine_input_type
+	/** setup_input_type
 	 *
 	 *	@description: Sets type of X-Editable input to use. Use as normal function or overwrite
 	 *	@filters:
-	 *		xe/input_type
-	 *	
-	 *	TO-DO: refactor - not sure if namedFields key search is working...
+	 *		xe/input_type/type={{type}}
 	 *
 	**/
 		protected function set_input_type( $input_type = NULL ) {
 			
 			if ( NULL !== $input_type ) {
-				$this->set_option('input_type', $input_type);
+				$this->set_option('input_type', $input_type);	
 			}
 			else {
 				
+				$acf_type = $this->field['type'];
+				
 				$namedFields = array(
+					// ACF TYPE => X-EDITABLE INPUT
 					'text' => 'text',
 					'textarea'	=> 'textarea',
 					'select' => 'select',
-					'date' => 'date_picker', // just to see if these works...
+					'date_picker' => 'date',
+					'number' => 'number',
 				);
-				// if 'type' is found in the array above (as a value)
-				if ( $inputType = array_search($this->field['type'], $namedFields) ) {
-					$this->set_option('input_type', $inputType);
+				
+				// if acf_type is found in the array above (as key)
+				if ( $namedFields[$acf_type] ) {
+					// set input type to value
+					$this->set_option('input_type', $namedFields[$acf_type] );
 				}
-				// otherwise expecting filter
+				
+				// otherwise filter - default 'text'
 				else {
 					$this->set_option('input_type', apply_filters('xe/input_type/type=' . $this->field['type'], 'text', &$this->field) );
 				}
+				
 			}
-			
+		
 		}
 		
 	
-	/**	set_source
+	/**	_source
 	 *
-	 *	@description: Sets html['source'] for selects, checklists, etc.
-	 *	@filters:	
-	 *		xe/html/source/type={{acf-field-type<}}
+	 *	@description: Sets html['source'] for fields with 'choices'
 	 *
-	 *	NOTE: Uses field->choices if exists
-	 *
-	 *	TO-DO: option for 'choices' as JSON string (for typeahead)
 	**/
-	
-		protected function set_source( $source = NULL ) {
+		private function setup_source() {
 			
-			if ( NULL !== $source ) {
-				$this->set_html('source', $source);
-			}
+			$choices = $this->field['choices'];
 			
-			elseif ( isset($this->field['choices']) ) {
-				$this->set_html('source', json_encode($this->field['choices'], JSON_FORCE_OBJECT) );
+			if ( isset($choices) ) {
+				$this->set_html('source', $this->to_json($choices));
 			}
-						
+									
 		}
+		
 	
-	
-	/** set_css_class
+	/** _css_class
 	 *
-	 *	@filters:
-	 *		xe/html/css_class/type={{acf-type}}
+	 *	@description: adds default & some dependent CSS classes to the element
 	 *
 	**/
-		private function _css_class() {
+		private function setup_css_class() {
 			
-			if ( ! isset($this->html['css_class']) ) {
-				$this->html['css_class'] = array();
-			}
-			
-			$this->html['css_class'][] = 'x-editable-element';
-			$this->html['css_class'][] = 'acf-type-' . $this->field['type']; 	
-			
-			if ( isset($this->field['field_type']) ) {
-				$this->html['css_class'][] = 'acf-field-type-' . $this->field['field_type']; 	
+			$type = $this->field['type'];
+			$field_type = $this->field['field_type'];
+						
+			$this->add_css_class('x-editable-element');
+			$this->add_css_class('acf-type-' . $type); 	
+						
+			if ( isset($field_type) ) {
+				$this->add_css_class('acf-field-type-' . $field_type); 	
 			}
 			
 			if ( $this->is_single_value() ) {
-				$this->html['css_class'][] = 'single-value';	
+				$this->add_css_class('single-value');	
 			}
 			
 			if ( $this->options['show_external'] ) {
-				$this->html['css_class'][] = 'values-external';	
+				$this->add_css_class('values-external');	
 			}
 			
-			$this->set_html('css_class', apply_filters('xe/html/css_class/type=' . $this->field['type'], $this->html['css_class'], &$this->field ) );
+			$this->set_html('css_class', apply_filters('xe/html/css_class/type=' . $type, $this->html['css_class'], &$this->field));
 			
 		}
+	
+	
+	/** to_json
+	 *
+	 *	@description: json_encode a variable as array string or objects (default)
+	 *
+	**/
+	
+	function to_json( $thing, $as_string = false ) {
+		
+		// Don't restrict user input to existing choices
+		if ( $as_string || ! $this->options['restrict_choices'] ) {
+			$json = json_encode($thing);
+		}
+		// Restrict user input to existing choices
+		else {
+			$json = json_encode($thing, JSON_FORCE_OBJECT);	
+		}
+		
+		return $json;
+		
+	}
+
 	
 }
 

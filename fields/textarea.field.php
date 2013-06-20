@@ -13,6 +13,7 @@ class XE_ACF_Textarea extends XE_ACF_Field {
 		$this->add_data_arg('rows', 6);
 		$this->add_data_arg('autoText', 'never');
 		$this->add_data_arg('mode', 'inline');
+		$this->add_data_arg('inputclass', 'input-block');
 		$this->add_data_arg('display', "false"); // quote booleans so they actually print
 		
 		/* Filters */
@@ -49,7 +50,7 @@ class XE_ACF_Textarea extends XE_ACF_Field {
 	// set the input type to use (in this case, not depending on value)
 	function set_input_type() {
 		
-		$this->options['input_type'] = 'textarea';
+		$this->set_option('input_type', 'textarea');
 		
 	}
 	
@@ -61,16 +62,16 @@ class XE_ACF_Textarea extends XE_ACF_Field {
 		//	1.	Empty value
 		
 		if ( empty($value) ) :
-			$this->html['value'] = '';
-			$this->html['text'] = 'Edit';	
+			$this->set_html('value', '');
+			$this->set_html('text', 'Edit');	
 		
 				
 		//	2.	Multiple Values
 		
 		else :
 		
-			$this->html['value'] = $this->field['value'];
-			$this->html['text'] = "Edit";
+			$this->set_html('value', $value);
+			$this->set_html('text', "Edit");
 		
 		endif;
 		
@@ -96,7 +97,8 @@ function xe_textarea( $field_name, $object_id, $args = array(), $object_name = f
 	if ( $show_label ) {
 		$textarea->show_label();	
 	}
-		
+	
+	// textarea is always external
 	$textarea->show_values();	
 	
 	$textarea->html();
