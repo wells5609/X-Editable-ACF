@@ -1,6 +1,6 @@
 # X-Editable ACF
 
-X-Editable ACF is a (developer-focused) plugin that allows front-end editing of Advanced Custom Fields in WordPress. 
+X-Editable ACF is a (developer-focused) plugin for in-line (front-end) editing of Advanced Custom Fields in WordPress. 
 
 
 ## Installation
@@ -10,21 +10,25 @@ X-Editable ACF is a (developer-focused) plugin that allows front-end editing of 
 
 ## Documentation
 
-Coming (relatively) soon (but don't hold your breath). PHP files are pretty well-documented, if I may say so myself.
+In progress (but don't hold your breath). PHP files are pretty well-documented, if I may say so myself.
 
 ## Features
 
-* Edit Advanced Custom Fields from the front-end
 * Currently supports the following fields:
-** Text
-** Textarea
-** Date-picker
-** Taxonomy
-** Number
+1. Text
+2. Textarea
+3. Date-picker
+4. Taxonomy
+5. Number
+6. User
+7. True/False
+8. Select
+* Template tags for easy theme integration
+* An extendable PHP class for custom ACF field types
 
 ## Contributing
 
-Everyone is welcome to help contribute and improve this project (please). Suggestions/money are welcome.
+Everyone is welcome to help contribute and improve this project. Suggestions & money are welcome.
 
 ## Support
 
