@@ -35,7 +35,7 @@ class XE_ACF_Functions {
 			$text = apply_filters('xe/external/text/type='. $field['type'], $field['value'], $field);
 		}
 		
-		do_action('xe/external/before', &$field);
+		do_action('xe/external/before', $field);
 		
 		// wrapper
 		$echo = '<'.$html_tag.' id="'.$html_id.'" class="'. implode( ' ', $html_class ) .'">';
@@ -45,7 +45,7 @@ class XE_ACF_Functions {
 			
 			$ul_class = apply_filters( 'xe/external/ul/html/css_class', array('xe-ul'), $field );
 			
-			do_action('xe/external/ul/before', &$field);
+			do_action('xe/external/ul/before', $field);
 			
 			$echo .= '<ul class="' . implode( ' ', $ul_class ) . '">';
 			
@@ -56,7 +56,7 @@ class XE_ACF_Functions {
 						
 			$echo .= '</ul>';
 			
-			do_action('xe/external/ul/after', &$field);
+			do_action('xe/external/ul/after', $field);
 			
 		}
 		
@@ -84,7 +84,7 @@ class XE_ACF_Functions {
 		
 		$echo .= '</'.$html_tag.'>';
 		
-		do_action('xe/external/after', &$field);
+		do_action('xe/external/after', $field);
 		
 		echo $echo;
 			
@@ -95,15 +95,15 @@ class XE_ACF_Functions {
 		
 		if ( $field['label'] ) {
 			
-			$html_tag = apply_filters( 'xe/label/html/tag', 'span', &$field );
-			$html_class = apply_filters( 'xe/label/html/css_class', array('xe-label'), &$field );
-			$text = apply_filters('xe/label/html/text', $field['label'], &$field);
+			$html_tag	= apply_filters( 'xe/label/html/tag', 'span', $field );
+			$html_class = apply_filters( 'xe/label/html/css_class', array('xe-label'), $field );
+			$text		= apply_filters( 'xe/label/html/text', $field['label'], $field );
 			
-			do_action('xe/label/before', &$field);
+			do_action('xe/label/before', $field);
 			
 			echo '<'.$html_tag.' class="x-editable ' . implode( ' ', $html_class ) .'">' . $text . ' </'.$html_tag.'>';
 		
-			do_action('xe/label/after', &$field);
+			do_action('xe/label/after', $field);
 		}
 		
 	}
@@ -112,7 +112,7 @@ class XE_ACF_Functions {
 		
 		$echo = '';
 				
-		do_action( 'xe/element/before', &$field );
+		do_action( 'xe/element/before', $field );
 				
 		$echo .= '<' . $html['tag'] . ' ';
 		
@@ -175,7 +175,7 @@ class XE_ACF_Functions {
 		
 		echo $echo;
 		
-		do_action( 'xe/element/after', &$field );
+		do_action( 'xe/element/after', $field );
 				
 	}
 	

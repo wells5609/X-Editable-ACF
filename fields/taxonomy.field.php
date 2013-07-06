@@ -12,34 +12,22 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 		parent::__construct($field_name, $object_id, $object_name);
 		
 		/* Field-specific args */
-		
 		$this->add_data_arg('taxonomy', $this->field['taxonomy']);
 	
 		/* custom input validation */
-		
 		$valid_inputs = array(
 			'checklist',
 			'select',
 		);
-		// hook yourself
-		$this->valid_inputs = apply_filters('xe/valid_inputs/type='.$this->field['type'], $valid_inputs, $this->field);
-		
+		// Themes/plugins can add more inputs here
+		$this->valid_inputs = apply_filters('xe/valid_inputs/type=' . $this->field['type'], $valid_inputs, $this->field);
 		
 		/* Filters */
-			
-		// return format determines text 
 		$format = $this->field['return_format'];
-	
-		if ( 'id' === $format ) {
-			add_filter('xe/external/text/type='. $this->field['type'] .'/format=id', array($this, 'external_text_id'), 10, 2);
-		}
-		
-		elseif ( 'object' === $format ) {
-			add_filter('xe/external/text/type='. $this->field['type'] .'/format='. $format, array($this, 'external_text_'. $format), 10, 2);
-		}
+		// return_format determines external text output
+		add_filter('xe/external/text/type=' . $this->field['type'] . '/format=' . $format, array($this, 'external_text_' . $format), 10, 2);
 		
 	}
-	
 	
 	// Return items as array (text of external values output)
 	function external_text_id( $field_value, $field ) {

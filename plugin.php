@@ -23,8 +23,14 @@ function x_editable_acf() {
 		return false;
 	}
 	
-	if ( ! current_user_can('edit_posts') ) {
-		return;	
+	// Define capability required to edit - default 'edit_posts'
+	$capability = apply_filters('xe/user_cap_to_edit', 'edit_posts');
+	
+	if ( current_user_can($capability) ) {
+		define('XE_CAN_EDIT', true);
+	}
+	else {
+		define('XE_CAN_EDIT', false);	
 	}
 	
 	require_once 'fields/xe-acf-field.php';
@@ -55,8 +61,6 @@ class XE_ACF_Plugin {
 		$this->default_fields();
 		
 		$this->user_fields();
-		
-		$this->enqueue_scripts();
 		
 	}
 	
@@ -103,7 +107,7 @@ class XE_ACF_Plugin {
 			
 	}
 	
-	private function enqueue_scripts() {
+	public function enqueue_scripts() {
 		wp_enqueue_style('x-editable');
 		wp_enqueue_script('x-editable-acf');
 		wp_localize_script(	'x-editable-acf', 'xeditable', array( 'ajaxurl' => admin_url('admin-ajax.php') ) );	
@@ -229,6 +233,9 @@ class XE_ACF_Plugin {
 								
 			wp_set_object_terms($object_id, $terms, $taxonomy, $single);
 	
+		}
+		elseif ( $object_id && $taxonomy && ! isset($value) ) {
+			wp_set_object_terms($object_id, array(), $taxonomy, $single);	
 		}
 		
 		die();	

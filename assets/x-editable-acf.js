@@ -48,8 +48,12 @@ jQuery(document).ready(function() {
 			if ( jQuery(this).data('external') == 1 ) {
 				var into = jQuery('html').find( '#' + name + '-content' );
 				var asUl = true;
+				var display = false;
+				var autotext = 'never';
 			} else { 
 				var into = jQuery(this);
+				var display = true;
+				var autotext = 'auto';
 			}
 			
 			jQuery(this).editable({
@@ -61,7 +65,7 @@ jQuery(document).ready(function() {
 					tax: tax,
 					object_name: objectName,
 				},
-				display: false,
+				display: display,
 				source: xeditable.ajaxurl+'?action=xeditable_tax_options&tax='+tax,
 				success: function() {
 					load_xe_terms(objectId, tax, into, asUl);
@@ -73,10 +77,19 @@ jQuery(document).ready(function() {
 		// USER field-type
 		else if ( acfType == 'user' ) {
 			
+			var objectId = jQuery(this).data('pk');
+			var name = jQuery(this).data('name');
 			var userRole = jQuery(this).data('role');
 			
 			if ( jQuery(this).hasClass('single-value') ) {
 				var singleValue = true;
+			}
+			// set success function vars
+			if ( jQuery(this).data('external') == 1 ) {
+				var into = jQuery('html').find( '#' + name + '-content' );
+				var asUl = true;
+			} else { 
+				var into = jQuery(this);
 			}
 			
 			jQuery(this).editable({
@@ -88,8 +101,11 @@ jQuery(document).ready(function() {
 					issingle: singleValue,
 					object_name: objectName,
 				},
+				display: false,
 				source: xeditable.ajaxurl+'?action=xeditable_user_options&role='+userRole,
-				
+				success: function() { 
+					load_xe_field(objectID, name, into, objectName)
+				}
 			});
 		}
 		

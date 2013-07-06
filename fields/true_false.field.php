@@ -82,9 +82,22 @@ class XE_ACF_True_False extends XE_ACF_Field {
 		//	1.	Empty value
 		
 		if ( empty($value) ) :
-			$this->set_html('value', '');
-			$this->set_html('text', 'Edit');	
 		
+			$empty_text = $this->get_option('empty_text');
+			
+			if ( $empty_text ) {
+				if ( ! is_bool($empty_text) ) {
+					$this->set_html('text', $empty_text);
+				}
+				elseif ( $text = $this->field['message'] ) {
+					$this->set_html('text', $text);
+				}
+			}
+			else {
+				$this->set_html('text', 'Edit');	
+			}
+			$this->set_html('value', '');
+			
 				
 		//	2.	Has Value
 		
@@ -128,6 +141,10 @@ function xe_true_false( $field_name, $object_id, $args = array(), $object_name =
 	
 	if ( $input_type ) {
 		$true_false->set_input_type($input_type);	
+	}
+	
+	if ( $empty_text ) {
+		$true_false->set_option('empty_text', $empty_text);	
 	}
 	
 	if ( $external ) {
