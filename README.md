@@ -10,11 +10,13 @@ X-Editable ACF is a (developer-focused) plugin for in-line (front-end) editing o
 
 ## Documentation
 
-In progress (but don't hold your breath). PHP files are pretty well-documented, if I may say so myself.
+Not really, but see the [wiki](https://github.com/wells5609/X-Editable-ACF/wiki/_pages). PHP files are pretty well-documented, if I may say so myself.
+Also see the [X-Editable docs](http://vitalets.github.com/x-editable/docs.html).
 
 ## Features
 
-* Currently supports the following fields:
+Currently supports the following fields:
+
 1. Text
 2. Textarea
 3. Date-picker
@@ -23,6 +25,8 @@ In progress (but don't hold your breath). PHP files are pretty well-documented, 
 6. User
 7. True/False
 8. Select
+
+Also includes:
 * Template tags for easy theme integration
 * An extendable PHP class for custom ACF field types
 
