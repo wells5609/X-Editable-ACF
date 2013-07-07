@@ -24,7 +24,7 @@ Currently supports the following fields:
 
 Also includes:
 * Template tag(s) for easy theme integration.
-* An extendable PHP class for adding custom ACF field type support.
+* An extendable PHP class for adding support for custom ACF field types.
 
 ## Documentation
 
@@ -33,7 +33,7 @@ See the [X-Editable docs](http://vitalets.github.com/x-editable/docs.html) as we
 
 ## Contributing
 
-Everyone is welcome to help contribute and improve this project. Suggestions & money are welcome.
+Everyone is welcome to help contribute and improve this project. Suggestions & money are also welcome.
 
 ## Support
 
