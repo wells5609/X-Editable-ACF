@@ -2,7 +2,6 @@
 
 class XE_ACF_Number extends XE_ACF_Field {
 	
-	var $number_decimals;
 	
 	function __construct( $field_name, $object_id, $object_name ) {
 		
@@ -17,15 +16,16 @@ class XE_ACF_Number extends XE_ACF_Field {
 		
 		add_filter('xe/external/text/type='. $this->field['type'], array($this, 'external_text'), 10, 2);
 		
-		/* defaults for custom vars */
-		$this->number_decimals = 2;
-				
+		/* defaults for custom option */
+		
+		$this->set_option('decimals', $integer);
+			
 	}
 	
 	// custom method
 	function set_decimals($integer) {
 		
-		$this->__set('number_decimals', $integer);
+		$this->set_option('decimals', $integer);
 			
 	}
 	
@@ -40,7 +40,7 @@ class XE_ACF_Number extends XE_ACF_Field {
 		}
 		elseif ( is_numeric($field_value) ) {
 			
-			$return = number_format($field_value, $this->number_decimals);				
+			$return = number_format($field_value, $this->options['decimals']);				
 		
 		}
 		
@@ -75,7 +75,7 @@ class XE_ACF_Number extends XE_ACF_Field {
 			
 			if ( is_numeric($value) ) {
 				
-				$this->set_html('text', number_format($value, $this->number_decimals));
+				$this->set_html('text', number_format($value, $this->options['decimals']));
 			
 			}
 			else {
@@ -91,31 +91,9 @@ class XE_ACF_Number extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_number( $field_name, $object_id, $args = array(), $object_name = false ) {
+function xe_number( $field_name, $object_id, $args = array() ) {
 	
-	extract($args);
-	
-	$number = new XE_ACF_Number($field_name, $object_id, $object_name);
-	
-	if ( $data ) {
-		foreach($data as $d => $v) :
-			$number->add_data_arg($d, $v);
-		endforeach;
-	}
-	
-	if ( $show_label ) {
-		$number->show_label();	
-	}
-	if ( $show_values ) {
-		$number->show_values();	
-	}
-	
-	// !is_null() allows us to pass 0
-	if ( !is_null($decimals) ) {
-		$number->set_decimals($decimals);
-	}
-	
-	$number->html();
+	xe_the_field('Number', $field_name, $object_id, $args);
 	
 }
 

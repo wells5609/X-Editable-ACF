@@ -66,26 +66,15 @@ class XE_ACF_Date extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_date( $field_name, $object_id, $args = array(), $object_name = false ) {
+function xe_date( $field_name, $object_id, $args = array() ) {
 	
-	$date = new XE_ACF_Date($field_name, $object_id, $object_name);
-	
-	extract($args);
-	
-	if ( $data ) {
-		foreach($data as $d => $v) :
-			$date->add_data_arg($d, $v);
-		endforeach;
+	// Never show external date values as ul
+	if ( $args['external'] ) {
+		$args['values_as_ul'] = false;	
 	}
 	
-	if ( $show_label )
-		$date->show_label();	
-
-	if ( $show_values ) 
-		$date->show_values(false); // don't use ul
-	
-	$date->html();
-	
+	xe_the_field('Date', $field_name, $object_id, $args);
+		
 }
 
 

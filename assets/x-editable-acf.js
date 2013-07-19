@@ -2,16 +2,22 @@ jQuery(document).ready(function() {
 	
 	jQuery('.x-editable-element').each( function() {
 	
-		var action = "xeditable_meta_handler";
-		var nonce = jQuery(this).data('nonce');	
+		var action = "xeditable_meta_handler",
+			nonce = jQuery(this).data('nonce'),
+			inputType = jQuery(this).data('type'),
+			acfType = jQuery(this).data('acf_type');
 		
-		var inputType = jQuery(this).data('type');
-		var acfType = jQuery(this).data('acf_type');
 		
 		// used for success callbacks
-		var name = jQuery(this).data('name');
-		var objectId = jQuery(this).data('pk');
-		var objectName = jQuery(this).data('object_name');
+		
+		var name = jQuery(this).data('name'),
+			objectId = jQuery(this).data('pk'),
+			objectName = jQuery(this).data('object_name');
+		
+		
+		if ( jQuery(this).hasClass('single-value') ) {
+			var isSingle = true;
+		}
 		
 		
 		// TEXTAREA inputs
@@ -26,34 +32,34 @@ jQuery(document).ready(function() {
 					object_name: objectName,
 				},
 				success: function() { 
-					load_xe_field(objectId, name, jQuery('html').find( '#' + name + '-content' ), objectName )
+					load_xe_field(objectId, name, jQuery('html').find( '#' + name + '-' + objectId + '-content' ), objectName, isSingle )
 				}	
 			});
 			
 		}
 		
+		
 		// TAXONOMY field-type
 		else if ( acfType == 'taxonomy' ) {
 			
 			// extra post/success vars
-			var objectId = jQuery(this).data('pk');
 			var name = jQuery(this).data('name');
 			var tax = jQuery(this).data('taxonomy');
 			
-			if ( jQuery(this).hasClass('single-value') ) {
-				var singleValue = true;
-			}
-			
 			// set success function vars
 			if ( jQuery(this).data('external') == 1 ) {
-				var into = jQuery('html').find( '#' + name + '-content' );
-				var asUl = true;
-				var display = false;
-				var autotext = 'never';
+				
+				var into = jQuery('html').find( '#' + name + '-' + objectId + '-content' ),
+					asUl = true,
+					display = false,
+					autotext = 'never';
+			
 			} else { 
-				var into = jQuery(this);
-				var display = true;
-				var autotext = 'auto';
+			
+				var into = jQuery(this),
+					display = true,
+					autotext = 'auto';
+			
 			}
 			
 			jQuery(this).editable({
@@ -61,7 +67,7 @@ jQuery(document).ready(function() {
 				params: {
 					action: 'xeditable_acf_taxonomy',
 					nonce: nonce,
-					issingle: singleValue,
+					issingle: isSingle,
 					tax: tax,
 					object_name: objectName,
 				},
@@ -77,16 +83,12 @@ jQuery(document).ready(function() {
 		// USER field-type
 		else if ( acfType == 'user' ) {
 			
-			var objectId = jQuery(this).data('pk');
 			var name = jQuery(this).data('name');
 			var userRole = jQuery(this).data('role');
 			
-			if ( jQuery(this).hasClass('single-value') ) {
-				var singleValue = true;
-			}
 			// set success function vars
 			if ( jQuery(this).data('external') == 1 ) {
-				var into = jQuery('html').find( '#' + name + '-content' );
+				var into = jQuery('html').find( '#' + name + '-' + objectId + '-content' );
 				var asUl = true;
 			} else { 
 				var into = jQuery(this);
@@ -98,13 +100,13 @@ jQuery(document).ready(function() {
 					action: action,
 					nonce: nonce,
 					acf_type: acfType,
-					issingle: singleValue,
+					issingle: isSingle,
 					object_name: objectName,
 				},
 				display: false,
 				source: xeditable.ajaxurl+'?action=xeditable_user_options&role='+userRole,
 				success: function() { 
-					load_xe_field(objectID, name, into, objectName)
+					load_xe_field(objectId, name, into, objectName, isSingle)
 				}
 			});
 		}
@@ -129,7 +131,11 @@ jQuery(document).ready(function() {
 	
 		
 	// AJAX Post Meta loader function
-	function load_xe_field(post_id, field, into, objName) {
+	function load_xe_field(object_id, field, into, objectName, isSingle) {
+		
+		if ( ! isSingle ) {
+			var isSingle = false;	
+		}
 		
 		jQuery.ajax({
 			type: 'POST',
@@ -137,8 +143,9 @@ jQuery(document).ready(function() {
 			data: {
 				action: 'xeditable_meta_load',
 				field: field,
-				post_id: post_id,
-				object_name: objName,
+				post_id: object_id,
+				object_name: objectName,
+				single: isSingle,
 			},
 			success: function(data, textStatus, XMLHttpRequest){
 				jQuery(into).html(data);	

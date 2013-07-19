@@ -188,42 +188,9 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_taxonomy( $field_name, $object_id, $args = array(), $object_name = false ) {
+function xe_taxonomy( $field_name, $object_id, $args = array() ) {
 	
-	$tax = new XE_ACF_Taxonomy($field_name, $object_id, $object_name);
-	
-	extract($args);
-	
-	if ( $input_type ) {
-		$tax->set_input_type($input_type);	
-	}
-	
-	if ( $data ) {
-		foreach($data as $d => $v) :
-			$tax->add_data_arg($d, $v);
-		endforeach;
-	}
-	
-	if ( $show_label ) {
-		$tax->show_label();	
-	}
-	
-	if ( $external ) {
-		
-		if ( $edit_button ) {
-			$tax->add_data_arg('external', true);
-			$tax->html();
-			$tax->show_values($values_as_ul);
-		}
-		else {
-			$tax->show_values($values_as_ul);	
-			$tax->html();
-		}
-		
-	}
-	else {
-		$tax->html();	
-	}
+	xe_the_field('Taxonomy', $field_name, $object_id, $args);
 		
 }
 

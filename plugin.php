@@ -2,8 +2,8 @@
 /*
 Plugin Name: X-Editable ACF
 Plugin URI: https://github.com/wells5609/X-Editable-ACF
-Description: Edit Advanced Custom Fields from the front-end using X-Editable.
-Version: 0.3.0
+Description: Edit Advanced Custom Fields from the front-end using X-Editable. Also has class for working with native meta (no template tags).
+Version: 0.3.3
 Author: Wells Peterson
 License: GPL
 Copyright: Wells Peterson
@@ -19,12 +19,12 @@ add_action( 'init', 'x_editable_acf' );
 
 function x_editable_acf() {
 	
-	if ( ! current_theme_supports( 'x-editable-acf' ) ) {
+	if ( ! current_theme_supports('x-editable-acf') && ! current_theme_supports('x-editable') ) {
 		return false;
 	}
 	
 	// Define capability required to edit - default 'edit_posts'
-	$capability = apply_filters('xe/user_cap_to_edit', 'edit_posts');
+	$capability = apply_filters('xeditable/user_cap_to_edit', 'edit_posts');
 	
 	if ( current_user_can($capability) ) {
 		define('XE_CAN_EDIT', true);
@@ -33,9 +33,13 @@ function x_editable_acf() {
 		define('XE_CAN_EDIT', false);	
 	}
 	
-	require_once 'fields/xe-acf-field.php';
+	include_once 'fields/_base.php';
 	
-	require_once 'xe-acf-functions.php';
+	require_once 'fields/_base-acf.php';
+	
+	require_once 'inc/class.xe-acf-functions.php';
+	
+	require_once 'inc/template-tag.php';
 	
 	new XE_ACF_Plugin();
 		
@@ -44,15 +48,13 @@ function x_editable_acf() {
 // Plugin class
 class XE_ACF_Plugin {
 	
-	public $user_fields;
+	public $user_fields = array();
 
 	private 
-		$version = '0.3.0',
-		$xeditable_version = '1.4.4';
+		$version = '0.3.2',
+		$xeditable_version = '1.4.5';
 	
 	function __construct() {		
-		
-		$this->user_fields = array();
 		
 		$this->hooks();
 		
@@ -63,18 +65,7 @@ class XE_ACF_Plugin {
 		$this->user_fields();
 		
 	}
-	
-	private function register_scripts() {
 		
-		// Bootstrap editable css
-		wp_register_style('x-editable', plugins_url( 'assets/bootstrap-editable.min.css' , __FILE__ ), array('bootstrap'), $this->xeditable_version );
-		// Bootstrap editable js
-		wp_register_script('x-editable', plugins_url( 'assets/bootstrap-editable.min.js' , __FILE__ ), array('jquery', 'bootstrap-js'), $this->xeditable_version, true );
-		// X-Editable WP
-		wp_register_script('x-editable-acf', plugins_url('assets/x-editable-acf.js', __FILE__ ), array('jquery', 'x-editable'), $this->version, true );
-		
-	}
-	
 	private function hooks() {
 		
 		// Meta edit 
@@ -83,7 +74,7 @@ class XE_ACF_Plugin {
 		
 		// Meta load
 		add_action( 'wp_ajax_xeditable_meta_load', array($this, 'load_meta') );
-		add_action( 'wp_ajax_nopriv_xeditable_meta_load', array($this, 'load_meta') );
+		add_action( 'wp_ajax_nopriv_xeditable_meta_load', array($this, 'must_log_in') );
 		
 		// Gets user options (for meta)
 		add_action( 'wp_ajax_xeditable_user_options', array($this, 'user_options') );
@@ -93,7 +84,7 @@ class XE_ACF_Plugin {
 		add_action( 'wp_ajax_xeditable_tax_options', array($this, 'tax_options') );
 		add_action( 'wp_ajax_nopriv_xeditable_tax_options', array($this, 'must_log_in') );
 		
-		// NEW! Taxonomy (ACF) field
+		// Taxonomy (ACF) field
 		add_action( 'wp_ajax_xeditable_acf_taxonomy', array($this, 'tax_handler') );
 		add_action( 'wp_ajax_nopriv_xeditable_acf_taxonomy', array($this, 'must_log_in') );
 		
@@ -105,6 +96,17 @@ class XE_ACF_Plugin {
 		add_action( 'wp_ajax_xeditable_term_load', array($this, 'load_terms') );
 		add_action( 'wp_ajax_nopriv_xeditable_term_load', array($this, 'must_log_in') );
 			
+	}
+	
+	private function register_scripts() {
+		
+		// Bootstrap editable css
+		wp_register_style('x-editable', plugins_url( 'assets/bootstrap-editable.min.css' , __FILE__ ), array('bootstrap'), $this->xeditable_version );
+		// Bootstrap editable js
+		wp_register_script('x-editable', plugins_url( 'assets/bootstrap-editable.min.js' , __FILE__ ), array('jquery', 'bootstrap-js'), $this->xeditable_version, true );
+		// X-Editable WP
+		wp_register_script('x-editable-acf', plugins_url('assets/x-editable-acf.js', __FILE__ ), array('jquery', 'x-editable'), $this->version, true );
+		
 	}
 	
 	public function enqueue_scripts() {
@@ -136,16 +138,18 @@ class XE_ACF_Plugin {
 	
 	private function user_fields() {
 		
+		// Default path is 'fields' directory of theme
 		$default_path = get_stylesheet_directory() . '/fields/';
 		
 		$this->user_fields = apply_filters('xe/user_fields', $this->user_fields);
 		
 		foreach($this->user_fields as $field) :
 			
+			// default filename is {$fieldname}.field.php
 			$default_location = $default_path . $field .'.field.php';
 			
 			$file_location = apply_filters('xe_' . $field . '_field_path', $default_location);
-			
+						
 			include_once $file_location;
 			
 		endforeach;	
@@ -159,20 +163,18 @@ class XE_ACF_Plugin {
 	
 	// user not logged in
 	public function must_log_in() {
-		echo 'You must log in to use this feature.';	
+		echo'You must log in to use this feature.';	
 	}
 	
 	// Taxonomy terms (add/remove to/from an object)
 	public function tax_handler() {
 		
 		$object_id = (int) $_POST['pk']; // the POST ID.
-		$name = $_POST['name']; // the acf-formatted field name - used for nonce.
+		$name = trim($_POST['name']); // the field name - used for nonce
 		$taxonomy = trim($_POST['tax']); // will be the taxonomy name
-		$value = $_POST['value'];
+		$value = wp_kses_stripslashes( $_POST['value'] );
 		$single = $_POST['issingle'];
 	
-
-		// nonce must match name.
 		if ( ! wp_verify_nonce( $_POST['nonce'], $name )) {
 			header('HTTP 400 Bad Request', true, 400);
 			exit('Wise guy, huh?');
@@ -193,13 +195,12 @@ class XE_ACF_Plugin {
 					$exists = get_term_by('id', $value, $taxonomy);	
 				}
 				
-				if ( false === $exists ) {
+				if ( ! $exists ) {
 					// add the term
 					$term = wp_insert_term($value, $taxonomy);
 					$term_id = $term['term_id'];
 				}
 				else {
-					
 					// probably an ID
 					if ( is_numeric($value) ) {
 						$term_id = $value;	
@@ -210,8 +211,7 @@ class XE_ACF_Plugin {
 					
 				}
 				
-				$terms[] = (int) $term_id;
-					
+				$terms[] = (int) $term_id;	
 			}
 			
 			elseif ( is_array($value) ) {
@@ -354,21 +354,38 @@ class XE_ACF_Plugin {
 	public function load_meta() {
 		
 		$post_id = $_REQUEST['post_id'];
-		$field = $_REQUEST['field'];
-		$object_name = $_REQUEST['object_name'];
+		$field = trim($_REQUEST['field']);
+		$object_name = trim($_REQUEST['object_name']);
+		$single = $_REQUEST['single'];
+		
+		$value = false;
 		
 		if (function_exists('get_field')) {
+			
 			// Prefix object_id with object type (taxonomy name, etc.)
 			if ( $object_name ) {
-				$post_id = $object_name . '_' . $post_id;
+				$value = get_field($field, $object_name . '_' . $post_id);
 			}
-			$value = get_field($field, $post_id);	
-		}
-		else {
-			$value = get_post_meta($post_id, $field);
+			else {
+				$value = get_field($field, $post_id);	
+			}
+			
 		}
 		
-		echo $value;
+		if ( $value ) {
+			echo $value;	
+		}
+		else {
+			if ( 'user' === $object_name ) {
+				$val = get_user_meta($post_id, $field, $single);
+			}
+			else {
+				$val = get_post_meta($post_id, $field, $single);
+			}
+			
+			echo $val;
+			
+		}
 		
 		die();
 			
@@ -379,7 +396,7 @@ class XE_ACF_Plugin {
 	
 		$object_id = $_POST['pk']; // post id.
 		$name = trim($_POST['name']); // the ACF field key
-		$value = $_POST['value']; // uses "data-value" if present, otherwise html contents.
+		$value = wp_kses_stripslashes($_POST['value']); // uses "data-value" if present, otherwise html contents.
 		$acf_type = $_POST['acf_type'];
 		$object_name = $_POST['object_name']; // if we're editing Term, User, etc. (not set for Post)
 			   
@@ -393,30 +410,17 @@ class XE_ACF_Plugin {
 		// Using !is_null() allows us to post '0' or 'false' as the value.
 		if ( ! is_null($value) ) {
 						
-			if (function_exists('update_field')) {
+			if ( function_exists('update_field') && ! empty($acf_type) ) {
 				
 				// Prefix object_id with object type (taxonomy name, etc.)
 				if ( $object_name ) {
 					
-					$object_id = $object_name . '_' . $object_id;	
-				
+					$object_id = $object_name . '_' . $object_id;
 				}
 				
-				if ( is_array($value) ) {
+				if ( 'user' == $acf_type ) {
 					
-					$array_vals = array();
-					
-					foreach($value as $val) :
-						$array_vals[] = $val;
-					endforeach;
-					
-					update_field($name, $array_vals, $object_id);
-				
-				}
-				elseif ( 'user' == $acf_type ) {
-					
-					update_field( $name, array($value), $object_id );	
-				
+					update_field( $name, array($value), $object_id );
 				}
 				else {
 					update_field( $name, $value, $object_id );
@@ -425,17 +429,13 @@ class XE_ACF_Plugin {
 			}
 			else {
 				
-				if ( is_array($value) ) {
-					
-					foreach($value as $val) :
-						update_post_meta($object_id, $name, $val);
-					endforeach;	
-				
+				if ( 'user' === $object_name ) {
+					update_user_meta($object_id, $name, $value);
 				}
 				else {
-					// THIS WILL ONLY WORK FOR POST OBJECTS !!
 					update_post_meta($object_id, $name, $value);
 				}
+				
 			}
 			
 			print_r($_POST); // debug response
@@ -448,9 +448,6 @@ class XE_ACF_Plugin {
 		
 		die();	
 	}
-
 	
-} // delete this and puppies get neglected.
-
-
+}
 ?>

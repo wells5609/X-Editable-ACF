@@ -111,38 +111,9 @@ class XE_ACF_User extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_user( $field_name, $object_id, $args = array(), $object_name = false ) {
+function xe_user( $field_name, $object_id, $args = array()) {
 	
-	extract($args);
-	
-	$userfield = new XE_ACF_User($field_name, $object_id, $object_name);
-	
-	if ( $data ) {
-		foreach($data as $d => $v) :
-			$userfield->add_data_arg($d, $v);
-		endforeach;
-	}
-	
-	if ( $show_label ) {
-		$userfield->show_label();	
-	}
-	
-	if ( $external ) {
-		
-		if ( $edit_button ) {
-			$userfield->add_data_arg('external', true);
-			$userfield->html();
-			$userfield->show_values($values_as_ul);
-		}
-		else {
-			$userfield->show_values($values_as_ul);	
-			$userfield->html();
-		}
-		
-	}
-	else {
-		$userfield->html();	
-	}
+	xe_the_field('User', $field_name, $object_id, $args);
 	
 }
 

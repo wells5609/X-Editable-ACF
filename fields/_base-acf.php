@@ -3,6 +3,7 @@
 class XE_ACF_Field {
 		
 	public
+	
 		$object_id,				/*	(int) queried object ID	*/
 			
 		$field,					/** (array) ACF field object
@@ -13,8 +14,8 @@ class XE_ACF_Field {
 								 *	tag			(string)	HTML tag to use (default 'a')
 								 *	text		(string)	text to display
 								 *	value		(string)	value for data-value
-								 *	css_class	(array)		CSS classes for element
-								 *	data_args	(array)		data-* attributes
+								 *	css_class	(array)i	CSS classes for element
+								 *	data_args	(array)a	data-* attributes
 								**/
 								
 		$options = array();		/** (array) options:
@@ -22,7 +23,9 @@ class XE_ACF_Field {
 								 * 	show_external	(boolean)	show the field's values externally (ie outside the editable element)
 								 *	input_type		(string)	input type to use
 								**/
-				
+		public $caps = array();
+		
+		
 	/** __construct
 	 *	
 	**/
@@ -42,21 +45,20 @@ class XE_ACF_Field {
 			}
 
 			$this->object_id = (int) $object_id;
-			
+						
 			$this->set_html('css_class', array());
 			$this->set_html('data_args', array());
-			
-			
-			// object_name? prefix ID for rest of functions AFTER setting var
-			if ( $object_name ) {
-				$object_id = $object_name . '_' . $object_id;
-				$this->add_data_arg('object_name', $object_name);
-			}
 			
 			$this->set_option('show_label', true);
 			$this->set_option('show_external', false);
 			$this->set_option('restrict_choices', false);
-									
+						
+			// object_name? prefix ID for rest of functions AFTER setting id
+			if ( $object_name ) {
+				$object_id = $object_name . '_' . $object_id;
+				$this->add_data_arg('object_name', $object_name);
+			}
+								
 			// user defined get_field_key function
 			if ( function_exists('get_field_key') ) {
 				$field = get_field_key($field_name);			
@@ -65,14 +67,23 @@ class XE_ACF_Field {
 			if ( ! $field || ! function_exists('get_field_key') ) {
 				$field = get_field_reference($field_name, $object_id);
 			}
-			// neither method found field key
-			if ( ! $field ) {
-				exit('Could not find field reference for ' . $field_name . '. Define and return via get_field_key() function.');	
+			
+			// found field key
+			if ( ! strstr( $field, 'field_' . $field_name ) ) {
+				$this->field = get_field_object( $field, $object_id );	
+				$this->set_html('label', $this->field['label']);
 			}
 			
-			$this->field = get_field_object( $field, $object_id );
+			else {
+				$this->field['value'] = get_post_meta($object_id, $field_name);
+				$this->field['name'] = $field_name;
+				$this->field['label'] = ucwords( implode(' ', explode('_',$field_name)) );
+			}
 			
-			$this->set_html('label', $this->field['label']);
+			// Default capability to edit: 'edit_posts'
+			$this->set_cap('edit', apply_filters('xe/caps/edit/name=' . $field_name, 'edit_posts', $this->field));
+			// No default view capability (i.e. anyone can view)
+			$this->set_cap('view', apply_filters('xe/caps/view/name='. $field_name, false, $this->field));
 			
 		}
 
@@ -137,7 +148,12 @@ class XE_ACF_Field {
 			public final function get_data_arg($key) {
 				return $this->html['data_args'][$key];
 			}
-				
+			public function get_cap($name) {
+				if ( isset($this->caps[$name]) )
+					return $this->caps[$name];	
+				else
+					return false;
+			}
 			
 		/** set_html
 		 *
@@ -157,7 +173,12 @@ class XE_ACF_Field {
 			public final function set_option( $name, $value ) {
 				$this->options[$name] = $value;
 			}
-	
+			
+			public function set_cap($name, $cap) {
+				
+				$this->caps[$name] = $cap;
+					
+			}
 		
 		
 		/** add_data_arg
@@ -247,8 +268,14 @@ class XE_ACF_Field {
 		**/
 			public final function show_label() {
 				
-				do_action('xe/create_label', $this->field);
-					
+				$view_cap = $this->get_cap('view');
+				
+				// if no view cap defined, or if it is defined and the current user has it
+				if ( ! $view_cap || ( $view_cap && current_user_can( $view_cap ) ) ) {
+				
+					do_action('xe/create_label', $this->field);
+				}
+				
 			}
 		
 		
@@ -259,8 +286,13 @@ class XE_ACF_Field {
 		**/ 
 			public final function show_values( $as_ul = false ) {
 				
-				do_action_ref_array('xe/create_external', array($this->field, $this->html, $as_ul));
-					
+				$view_cap = $this->get_cap('view');
+				
+				if ( ! $view_cap || ( $view_cap && current_user_can( $view_cap ) ) ) {
+				
+					do_action_ref_array('xe/create_external', array($this->object_id, $this->field, $this->html, $as_ul));
+				}
+				
 			}	
 	
 			
@@ -272,17 +304,22 @@ class XE_ACF_Field {
 			
 			public final function html() {
 				
-				$this->set_value_and_text();
+				$view_cap = $this->get_cap('view');
 				
-				if ( empty($this->options['input_type'])) {
-					$this->set_input_type();
+				if ( ! $view_cap || ( $view_cap && current_user_can( $view_cap ) ) ) {
+
+					$this->set_value_and_text();
+					
+					if ( empty($this->options['input_type'])) {
+						$this->set_input_type();
+					}
+					
+					$this->setup_source();
+					$this->setup_css_class();
+					
+					do_action('xe/create_element', $this->field, $this->object_id, $this->html, $this->options);
 				}
 				
-				$this->setup_source();
-				$this->setup_css_class();
-				
-				do_action('xe/create_element', $this->field, $this->object_id, $this->html, $this->options);
-			
 			}
 	
 
@@ -293,7 +330,7 @@ class XE_ACF_Field {
 	
 	/**	set_value_and_output
 	 *
-	 *	@description: sets html_value and html_display vars
+	 *	@description: sets html['value'] and html['text'] vars
 	 *
 	 *	Most fields should overwrite this function
 	 *
@@ -301,20 +338,24 @@ class XE_ACF_Field {
 		
 		protected function set_value_and_text() {
 			
+			// all depends on field type
+			$type = $this->field['type'];
+			
 			// Has return_format
-			if ( $this->field['return_format'] ) {
+			if ( $rtn_formt = $this->field['return_format'] ) {
 				
 				// Value
+				$value = $this->field['value'];
 				
-				$this->set_html('value', apply_filters('xe/html/value/type=' . $this->field['type'] . '/format=' . $this->field['return_format'], $this->field['value']));				
+				$this->set_html('value', apply_filters('xe/html/value/type=' . $type . '/format=' . $rtn_formt, $value));				
 				
 				// Text
 				
-				if ( empty($this->field['value']) ) {
-					$this->set_html('text', apply_filters('xe/html/text/type=' . $this->field['type'] . '/format=' . $this->field['return_format'], '<em>Empty</em>'));
+				if ( empty($value) ) {
+					$this->set_html('text', apply_filters('xe/html/text/type=' . $type . '/format=' . $rtn_formt, '<em>Empty</em>'));
 				}
 				else {
-					$this->set_html('text', apply_filters('xe/html/text/type=' . $this->field['type'] . '/format=' . $this->field['return_format'], $this->field['value']));				
+					$this->set_html('text', apply_filters('xe/html/text/type=' . $type . '/format=' . $rtn_formt, $value));				
 				}
 				
 			}
@@ -324,15 +365,15 @@ class XE_ACF_Field {
 				
 				// Value
 				
-				$this->set_html('value', apply_filters('xe/html/value/type=' . $this->field['type'], $this->field['value']));
+				$this->set_html('value', apply_filters('xe/html/value/type=' . $type, $value));
 				
 				// Text
 				
-				if ( empty($this->field['value']) ) {
-					$this->set_html('text', apply_filters('xe/html/text/type=' . $this->field['type'], '<em>Empty</em>'));
+				if ( empty($value) ) {
+					$this->set_html('text', apply_filters('xe/html/text/type=' . $type, '<em>Empty</em>'));
 				}
 				else {
-					$this->set_html('text', apply_filters('xe/html/text/type=' . $this->field['type'], $this->field['value']));				
+					$this->set_html('text', apply_filters('xe/html/text/type=' . $type, $value));				
 				}
 				
 			}

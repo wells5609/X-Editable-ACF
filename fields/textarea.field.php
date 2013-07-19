@@ -82,27 +82,9 @@ class XE_ACF_Textarea extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_textarea( $field_name, $object_id, $args = array(), $object_name = false ) {
+function xe_textarea( $field_name, $object_id, $args = array() ) {
 	
-	extract($args);
-	
-	$textarea = new XE_ACF_Textarea($field_name, $object_id, $object_name);
-	
-	if ( $data ) {
-		foreach($data as $d => $v) :
-			$textarea->add_data_arg($d, $v);
-		endforeach;
-	}
-	
-	if ( $show_label ) {
-		$textarea->show_label();	
-	}
-	
-	// textarea is always external
-	$textarea->show_values();	
-	
-	$textarea->html();
-	
+	xe_the_field('Textarea', $field_name, $object_id, $args);
 }
 
 

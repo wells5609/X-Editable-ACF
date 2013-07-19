@@ -9,7 +9,7 @@ class XE_ACF_Functions {
 		
 		if ( ! has_action('xe/create_external', array('XE_ACF_Functions', 'create_external')) ) {
 			
-			add_action( 'xe/create_external', array('XE_ACF_Functions', 'create_external'), 5, 3);
+			add_action( 'xe/create_external', array('XE_ACF_Functions', 'create_external'), 5, 4);
 		
 		}
 		
@@ -20,10 +20,10 @@ class XE_ACF_Functions {
 	}
 		
 	
-	public static function create_external( $field, $html, $as_ul ) {
+	public static function create_external( $id, $field, $html, $as_ul ) {
 		
 		$html_tag = apply_filters( 'xe/external/wrapper/html/tag', 'div', $field );
-		$html_id = $field['name'] . '-content';	// do not change or filter - JS relies on format
+		$html_id = $field['name'] . '-' . $id . '-content';	// do not change or filter - JS relies on format
 		$html_class = apply_filters( 'xe/external/wrapper/html/css_class', array('xe-values'), $field );
 		
 		// text formatted for external display
@@ -163,7 +163,13 @@ class XE_ACF_Functions {
 		
 		// if display values externally, change edit text to (default) "Edit" (fields can filter)
 		if ( isset($html['data_args']) && in_array('external', $html['data_args']) ) {
-			$echoText = apply_filters('xe/element/html/text/external/type=' . $field['type'], 'Edit <br>', $field);
+			
+			if ( XE_CAN_EDIT ) {
+				$echoText = apply_filters('xe/element/html/text/external/type=' . $field['type'], 'Edit <br>', $field);
+			}
+			else {
+				$echoText = apply_filters('xe/element/html/text/external/type=' . $field['type'], '', $field);
+			}
 		}
 		else {
 			$echoText = $html['text'];

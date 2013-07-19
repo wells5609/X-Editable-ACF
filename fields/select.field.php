@@ -76,39 +76,10 @@ class XE_ACF_Select extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_select( $field_name, $object_id, $args = array(), $object_name = false ) {
+function xe_select( $field_name, $object_id, $args = array() ) {
 	
-	$select = new XE_ACF_Select($field_name, $object_id, $object_name);
-	
-	extract($args);
-	
-	if ( $data ) {
-		foreach($data as $d => $v) :
-			$select->add_data_arg($d, $v);
-		endforeach;
-	}
-	
-	if ( $show_label ) {
-		$select->show_label();	
-	}
-	
-	if ( $external ) {
+	xe_the_field('Select', $field_name, $object_id, $args);
 		
-		if ( $edit_button ) {
-			$select->add_data_arg('external', true);
-			$select->html();
-			$select->show_values();
-		}
-		else {
-			$select->show_values();	
-			$select->html();
-		}
-		
-	}
-	else {
-		$select->html();	
-	}
-	
 }
 
 

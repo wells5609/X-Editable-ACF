@@ -123,46 +123,9 @@ class XE_ACF_True_False extends XE_ACF_Field {
 
 /* Template tags */
 
-function xe_true_false( $field_name, $object_id, $args = array(), $object_name = false ) {
+function xe_true_false( $field_name, $object_id, $args = array() ) {
 	
-	$true_false = new XE_ACF_True_False($field_name, $object_id, $object_name);
-	
-	extract($args);
-	
-	if ( $data ) {
-		foreach($data as $d => $v) :
-			$true_false->add_data_arg($d, $v);
-		endforeach;
-	}
-	
-	if ( $show_label ) {
-		$true_false->show_label();	
-	}
-	
-	if ( $input_type ) {
-		$true_false->set_input_type($input_type);	
-	}
-	
-	if ( $empty_text ) {
-		$true_false->set_option('empty_text', $empty_text);	
-	}
-	
-	if ( $external ) {
-		
-		if ( $edit_button ) {
-			$true_false->add_data_arg('external', true);
-			$true_false->html();
-			$true_false->show_values();
-		}
-		else {
-			$true_false->show_values();	
-			$true_false->html();
-		}
-		
-	}
-	else {
-		$true_false->html();	
-	}
+	xe_the_field('True_False', $field_name, $object_id, $args);
 	
 }
 
