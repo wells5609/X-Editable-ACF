@@ -1,21 +1,21 @@
 <?php
 
-class XE_ACF_Date extends XE_ACF_Field {
+class X_Editable_ACF_Date extends X_Editable_ACF_Field {
 	
 	
-	function __construct( $field_name, $object_id, $object_name ) {
+	function __construct( $field_name, $object_id, $args = array() ) {
 		
 		// don't remove
-		parent::__construct($field_name, $object_id, $object_name);
+		parent::__construct($field_name, $object_id, $args);
 		
 		// add filters
-		add_filter('xe/external/text/type='. $this->field['type'], array($this, 'external_text'), 10, 2);
+		add_filter('xe/external/text/type='. $this->fieldProp('type'), array($this, 'external_text'), 10, 2);
 		
 		$this->set_input_type('date');
 				
 		// add other stuffs
-		$this->add_data_arg('format', 'yyyy-mm-dd');
-		$this->add_data_arg('viewformat', 'M d, yyyy');
+		$this->addDataArg('format', 'yyyy-mm-dd');
+		$this->addDataArg('viewformat', 'M d, yyyy');
 		
 	}
 	
@@ -41,21 +41,21 @@ class XE_ACF_Date extends XE_ACF_Field {
 	// sets value and text for X-Editable element attributes
 	function set_value_and_text() {
 		
-		$value = $this->field['value'];
+		$value = $this->fieldProp('value');
 		
 		//	1.	Empty value
 		
 		if ( empty($value) ) :
-			$this->set_html('value', '');
-			$this->set_html('text', '<em>Empty</em>');	
+			$this->setHtml('value', '');
+			$this->setHtml('text', '<em>Empty</em>');	
 		
 				
 		//	2.	Values
 		
 		else :
 			
-			$this->set_html('value', $value);
-			$this->set_html('text', $value);	
+			$this->setHtml('value', $value);
+			$this->setHtml('text', $value);	
 		
 		endif;
 		
@@ -69,7 +69,7 @@ class XE_ACF_Date extends XE_ACF_Field {
 function xe_date( $field_name, $object_id, $args = array() ) {
 	
 	// Never show external date values as ul
-	if ( $args['external'] ) {
+	if ( isset($args['external']) && $args['external'] ) {
 		$args['values_as_ul'] = false;	
 	}
 	

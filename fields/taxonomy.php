@@ -1,18 +1,18 @@
 <?php
 
-class XE_ACF_Taxonomy extends XE_ACF_Field {
+class X_Editable_ACF_Taxonomy extends X_Editable_ACF_Field {
 	
 	// custom field var
 	var $valid_inputs;
 	
 	
-	function __construct( $field_name, $object_id, $object_name ) {
+	function __construct( $field_name, $object_id, $args = array() ) {
 		
 		/* parental construction */
-		parent::__construct($field_name, $object_id, $object_name);
+		parent::__construct($field_name, $object_id, $args = array() );
 		
 		/* Field-specific args */
-		$this->add_data_arg('taxonomy', $this->field['taxonomy']);
+		$this->addDataArg('taxonomy', $this->meta['taxonomy']);
 	
 		/* custom input validation */
 		$valid_inputs = array(
@@ -20,23 +20,29 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 			'select',
 		);
 		// Themes/plugins can add more inputs here
-		$this->valid_inputs = apply_filters('xe/valid_inputs/type=' . $this->field['type'], $valid_inputs, $this->field);
+		$this->valid_inputs = apply_filters('xe/valid_inputs/type=' . $this->meta['type'], $valid_inputs, $this->meta);
 		
 		/* Filters */
-		$format = $this->field['return_format'];
+		$format = $this->meta['return_format'];
+		
+		$this->set_input_type();
+		
+		
 		// return_format determines external text output
-		add_filter('xe/external/text/type=' . $this->field['type'] . '/format=' . $format, array($this, 'external_text_' . $format), 10, 2);
+		add_filter('xe/external/text/type=taxonomy/format=id', array($this, 'external_text_id'), 10, 2);
+		
+		add_filter('xe/external/text/type=taxonomy/format=object', array($this, 'external_text_object'), 10, 2);
 		
 	}
 	
 	// Return items as array (text of external values output)
 	function external_text_id( $field_value, $field ) {
 		
-		$return = array();
-		
 		// array value
 		if ( is_array($field_value) ) {
-			
+	
+			$return = array();
+	
 			foreach($field_value as $val) :
 				
 				$term = get_term_by('id', $val, $field['taxonomy']);
@@ -45,39 +51,57 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 								
 			endforeach;
 			
+			return $return;
 		}
+		
 		// non-empty, non-array value
 		elseif ( !empty($field_value) ) {
 			
 			$term = get_term_by('id', $field_value, $field['taxonomy']);
 					
-			$return = $term->name;				
-	
+			return $term->name;
 		}
-		
-		return $return;
-		
+				
 	}
 	
 	// format external display text for "object" return_format
 	function external_text_object( $field_value, $field ) {
 		
-		$return = array();
 		
+		if ( strstr($this->html['text'], ',') ) {
+			
+			$strings = @explode(',', $this->html['text']);
+			$words = array();
+			foreach($strings as $string){
+				$words[] = trim($string);	
+			}
+			
+			return $words;
+			
+		}
+		elseif ( !empty($this->html['text']) ){
+			return $this->html['text'];	
+		}
+		
+	/*
 		// array value
 		if ( is_array($field_value) ) {
-			
+		
+			$return = array();
+		
 			foreach($field_value as $val) :
 				$return[] = $val->name;
+				vardump($val);
 			endforeach;
+			
+			return $return;
 			
 		}
 		elseif ( !empty($field_value) ) {
-			$return = $field_value->name;			
+			return $field_value->name;			
 		}
-		
-		return $return;
-		
+	*/
+	
 	}
 	
 	
@@ -93,17 +117,17 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 		
 		if ( NULL !== $input && in_array($input, $this->valid_inputs) ) {
 
-			$this->set_option('input_type', $input);	
+			$this->setOption('input_type', $input);	
 	
 		}
 		else {
 			
-			if ( $this->is_single_value() || ( isset($this->field['value']) && ! is_array($this->field['value']) ) ) {
-				$this->set_option('input_type', 'select');	
+			if ( $this->is_single_value() || ( isset($this->meta['value']) && ! is_array($this->meta['value']) ) ) {
+				$this->setOption('input_type', 'select');	
 			}
 			
 			else {
-				$this->set_option('input_type', $this->valid_inputs[0]); // checklist
+				$this->setOption('input_type', $this->valid_inputs[0]); // checklist
 			}
 			
 		}
@@ -113,15 +137,15 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 	// sets value and text for X-Editable element attributes
 	function set_value_and_text() {
 		
-		$value = $this->field['value'];
-		$format = $this->field['return_format'];
+		$value = $this->meta['value'];
+		$format = $this->meta['return_format'];
 		
 		//	1.	Empty value
 		
 		if ( empty($value) ) :
 		
-			$this->set_html('value', '');
-			$this->set_html('text', '<em>Empty</em>');		
+			$this->setHtml('value', '');
+			$this->setHtml('text', '<em>Empty</em>');		
 						
 		
 		//	2.	Multiple Values
@@ -144,7 +168,7 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 				// id return_format
 				elseif ( 'id' === $format ) {
 					
-					$term = get_term_by('id', $val, $this->field['taxonomy']);
+					$term = get_term_by('id', $val, $this->meta['taxonomy']);
 					
 					$valueArray[] = $term->term_id;
 					$textArray[] = $term->name;
@@ -153,8 +177,8 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 
 			endforeach;
 			
-			$this->set_html('value', implode(',', $valueArray));
-			$this->set_html('text', implode(', ', $textArray));
+			$this->setHtml('value', implode(',', $valueArray));
+			$this->setHtml('text', implode(', ', $textArray));
 			
 			
 		//	3.	One value
@@ -163,20 +187,20 @@ class XE_ACF_Taxonomy extends XE_ACF_Field {
 			
 			if ( 'object' === $format ) {
 				
-				$this->set_html('value', $value->term_id);
-				$this->set_html('text', $value->name);
+				$this->setHtml('value', $value->term_id);
+				$this->setHtml('text', $value->name);
 				
 			}
 			elseif ( 'id' === $format ) {
 				
-				$term = get_term_by('id', $value, $this->field['taxonomy']);
+				$term = get_term_by('id', $value, $this->meta['taxonomy']);
 				
-				$this->set_html('value', $value);
-				$this->set_html('text', $term->name);
+				$this->setHtml('value', $value);
+				$this->setHtml('text', $term->name);
 				
 			}
 			else {
-				$this->set_html('text', 'Something went horribly wrong.');		
+				$this->setHtml('text', 'Something went horribly wrong.');		
 			}
 
 		endif;
@@ -193,6 +217,5 @@ function xe_taxonomy( $field_name, $object_id, $args = array() ) {
 	xe_the_field('Taxonomy', $field_name, $object_id, $args);
 		
 }
-
 
 ?>

@@ -3,58 +3,48 @@
 
 function xe_the_field( $type, $field_name, $object_id, $args = array() ) {
 		
-	$field_class = 'XE_ACF_' . ucfirst($type);
+	$field_class = 'X_Editable_ACF_' . ucfirst($type);
 	
-	if ( ! class_exists($field_class) ) {
-		throw new Exception("Field class $field_class does not exist");	
-	}
+	if ( ! class_exists($field_class) )
+		throw new Exception("Field class {$field_class} does not exist");
 	
-	if ( ! $args['object_name'] ) {
-		$args['object_name'] = false;
-	}
+	$field = new $field_class($field_name, $object_id, $args);
 	
 	extract($args);
 	
-	$field = new $field_class($field_name, $object_id, $object_name);
+	if ( isset($input_type) && $input_type )
+		$field->set_input_type($input_type);
 	
-	if ( $input_type ) {
-		$field->set_input_type($input_type);	
-	}
-	
-	if ( $data ) {
+	if ( isset($data) && is_array($data) ) {
 		foreach($data as $d => $v) :
-			$field->add_data_arg($d, $v);
+			$field->addDataArg($d, $v);
 		endforeach;
 	}
 	
-	if ( $empty_text ) {
-		$field->set_option('empty_text', $empty_text);	
-	}
+	if ( isset($empty_text) && $empty_text )
+		$field->setOption('empty_text', $empty_text);
 	
-	if ( isset($decimals) && ! is_null($decimals) ) {
-		$field->set_option('decimals', $decimals);	
-	}
+	if ( isset($decimals) && ! is_null($decimals) )
+		$field->setOption('decimals', $decimals);
 	
-	if ( $show_label ) {
-		$field->show_label();	
-	}
+	if ( isset($show_label) && $show_label )
+		$field->showLabel();	
 	
-	if ( $external ) {
+	if ( isset($external) && $external ) {
 		
-		if ( $edit_link ) {
-			$field->add_data_arg('external', true);
+		if ( isset($edit_link) && $edit_link ) {
+			$field->addDataArg(array('external' => true, 'edit_link' => true));
 			$field->html();
-			$field->show_values($values_as_ul);
+			$field->showValues($values_as_ul);
 		}
 		else {
-			$field->show_values($values_as_ul);	
+			$field->showValues($values_as_ul);	
 			$field->html();
 		}
 		
 	}
-	else {
-		$field->html();	
-	}
+	else
+		$field->html();
 	
 }
 

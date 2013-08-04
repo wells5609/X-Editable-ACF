@@ -1,12 +1,12 @@
 <?php
 
-class XE_ACF_True_False extends XE_ACF_Field {
+class X_Editable_ACF_True_False extends X_Editable_ACF_Field {
 	
 	
-	function __construct( $field_name, $object_id, $object_name ) {
+	function __construct( $field_name, $object_id, $args = array() ) {
 		
 		// don't remove
-		parent::__construct($field_name, $object_id, $object_name);
+		parent::__construct($field_name, $object_id,  $args = array());
 			
 		/* Field-specific args */
 		
@@ -15,12 +15,14 @@ class XE_ACF_True_False extends XE_ACF_Field {
 			'checklist',
 		);
 		
-		// Custom setup functions
-		$this->set_source();
-		
 		/* Filters */
 		
-		add_filter('xe/external/text/type='. $this->field['type'], array($this, 'external_text'), 10, 2);
+		add_filter('xe/external/text/type='. $this->fieldProp('type'), array($this, 'external_text'), 10, 2);
+		
+		$this->set_input_type();
+		
+		// Custom setup functions
+		$this->setSource();
 		
 	}
 	
@@ -41,20 +43,19 @@ class XE_ACF_True_False extends XE_ACF_Field {
 		return $return;
 		
 	}
-	
-	
+		
 	// Called in constructor - sets data-source for element
-	private function set_source() {
+	private function setSource() {
 		
 		$source = array(
 			1 => 'Yes',
 			0 => 'No',
 		);
 		
-		$this->set_html('source', json_encode($source, JSON_FORCE_OBJECT));
-		
+		$this->setHtml('source', json_encode($source, JSON_FORCE_OBJECT));
 	}
 		
+	
 	/** =======================
 		Redefined functions 
 		(from parent class)
@@ -69,7 +70,7 @@ class XE_ACF_True_False extends XE_ACF_Field {
 			$input = $this->valid_inputs[0];	
 		}
 		
-		$this->set_option('input_type', $input);
+		$this->setOption('input_type', $input);
 			
 	}
 	
@@ -77,41 +78,41 @@ class XE_ACF_True_False extends XE_ACF_Field {
 	// sets value and text for X-Editable element attributes
 	function set_value_and_text() {
 		
-		$value = $this->field['value'];
+		$value = $this->fieldProp('value');
 		
 		//	1.	Empty value
 		
 		if ( empty($value) ) :
 		
-			$empty_text = $this->get_option('empty_text');
+			$empty_text = $this->getOption('empty_text');
 			
 			if ( $empty_text ) {
 				if ( ! is_bool($empty_text) ) {
-					$this->set_html('text', $empty_text);
+					$this->setHtml('text', $empty_text);
 				}
-				elseif ( $text = $this->field['message'] ) {
-					$this->set_html('text', $text);
+				elseif ( $text = $this->fieldProp('message') ) {
+					$this->setHtml('text', $text);
 				}
 			}
 			else {
-				$this->set_html('text', 'Edit');	
+				$this->setHtml('text', 'Edit');	
 			}
-			$this->set_html('value', '');
+			$this->setHtml('value', '');
 			
 				
 		//	2.	Has Value
 		
 		else :
 				
-			$this->set_html('value', $value);
+			$this->setHtml('value', $value);
 			
 			if ( 1 == $value ) {
 				
-				$this->set_html('text', 'Yes');
+				$this->setHtml('text', 'Yes');
 			
 			}
 			elseif ( 0 == $value ) {
-				$this->set_html('text', 'No');
+				$this->setHtml('text', 'No');
 			}
 			
 		endif;

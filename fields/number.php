@@ -1,31 +1,31 @@
 <?php
 
-class XE_ACF_Number extends XE_ACF_Field {
+class X_Editable_ACF_Number extends X_Editable_ACF_Field {
 	
 	
-	function __construct( $field_name, $object_id, $object_name ) {
+	function __construct( $field_name, $object_id, $args = array() ) {
 		
 		$this->set_input_type('number');
 		
 		// don't remove
-		parent::__construct($field_name, $object_id, $object_name);
+		parent::__construct($field_name, $object_id, $args = array());
 			
 		/* Field-specific args */
 		
 		/* Filters */
 		
-		add_filter('xe/external/text/type='. $this->field['type'], array($this, 'external_text'), 10, 2);
+		add_filter('xe/external/text/type='. $this->fieldProp('type'), array($this, 'external_text'), 10, 2);
 		
 		/* defaults for custom option */
 		
-		$this->set_option('decimals', $integer);
+		$this->set_decimals(2);
 			
 	}
 	
 	// custom method
 	function set_decimals($integer) {
 		
-		$this->set_option('decimals', $integer);
+		$this->setOption('decimals', $integer);
 			
 	}
 	
@@ -40,7 +40,7 @@ class XE_ACF_Number extends XE_ACF_Field {
 		}
 		elseif ( is_numeric($field_value) ) {
 			
-			$return = number_format($field_value, $this->options['decimals']);				
+			$return = number_format($field_value, $this->getOption('decimals'));				
 		
 		}
 		
@@ -58,28 +58,28 @@ class XE_ACF_Number extends XE_ACF_Field {
 	// sets value and text for X-Editable element attributes
 	function set_value_and_text() {
 		
-		$value = $this->field['value'];
+		$value = $this->fieldProp('value');
 		
 		//	1.	Empty value
 		
 		if ( empty($value) ) :
-			$this->set_html('value', '');
-			$this->set_html('text', 'Edit');	
+			$this->setHtml('value', '');
+			$this->setHtml('text', 'Edit');	
 		
 				
 		//	2.	has value
 		
 		else :
 		
-			$this->set_html('value', $value);
+			$this->setHtml('value', $value);
 			
 			if ( is_numeric($value) ) {
 				
-				$this->set_html('text', number_format($value, $this->options['decimals']));
+				$this->setHtml('text', number_format($value, $this->getOption('decimals')));
 			
 			}
 			else {
-				$this->set_html('text', $value);	
+				$this->setHtml('text', $value);	
 			}
 			
 		endif;

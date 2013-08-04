@@ -1,6 +1,6 @@
 <?php
 
-class XE_ACF_User extends XE_ACF_Field {
+class X_Editable_ACF_User extends X_Editable_ACF_Field {
 	
 	
 	function __construct( $field_name, $object_id, $object_name ) {
@@ -13,7 +13,7 @@ class XE_ACF_User extends XE_ACF_Field {
 		
 		/* Filters */
 		
-		add_filter('xe/external/text/type='. $this->field['type'], array($this, 'external_text'), 10, 2);
+		add_filter('xe/external/text/type='. $this->fieldProp('type'), array($this, 'external_text'), 10, 2);
 		
 	}
 	
@@ -45,11 +45,11 @@ class XE_ACF_User extends XE_ACF_Field {
 	// set the input type to use
 	function set_input_type() {
 		
-		if ( 'select' === $this->field['field_type'] ) {
-			$this->set_option('input_type', 'select');
+		if ( 'select' === $this->fieldProp('field_type') ) {
+			$this->setOption('input_type', 'select');
 		}
 		else {
-			$this->set_option('input_type', 'checklist');
+			$this->setOption('input_type', 'checklist');
 		}
 		
 	}
@@ -57,14 +57,14 @@ class XE_ACF_User extends XE_ACF_Field {
 	// sets value and text for X-Editable element attributes
 	function set_value_and_text() {
 		
-		$value = $this->field['value'];
+		$value = $this->fieldProp('value');
 		
 		//	1.	Empty value
 		
 		if ( empty($value) ) :
 		
-			$this->set_html('value', '');
-			$this->set_html('text', 'Edit');	
+			$this->setHtml('value', '');
+			$this->setHtml('text', 'Edit');	
 		
 				
 		//	2.	Has Value
@@ -99,8 +99,8 @@ class XE_ACF_User extends XE_ACF_Field {
 										
 			}
 			
-			$this->set_html('value', $html_value);
-			$this->set_html('text', $html_text);
+			$this->setHtml('value', $html_value);
+			$this->setHtml('text', $html_text);
 		
 		endif;
 		
