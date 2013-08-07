@@ -7,7 +7,7 @@ X-Editable ACF (XE-ACF) is a WordPress plugin to enable in-line (front-end) edit
 
 * Requires ACF (v4.0+)
 * Install and activate plugin
-* Add theme support in functions.php using <code>add_theme_support('x-editable-acf');</code> (see main plugin loader file)
+
 
 ## Features
 
