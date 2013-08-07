@@ -79,14 +79,18 @@ class X_Editable_AJAX_Callbacks {
 		}
 		else {
 			
-			if ( function_exists('update_field') && ! empty($acf_type) ) {
+			if ( function_exists('update_field') && isset($acf_type) ) {
 				
 				// Prefix object_id with object type (taxonomy name, etc.)
 				if ( $object_name )
 					$object_id = $object_name . '_' . $object_id;
-					
+				
+				if ( isset($_POST['key']) && $_POST['key'] ) {
+					$name = 'field_' . $_POST['key'];	
+				}
+				
 				// forget why I did this, but I assume there was a reason...
-				if ( 'user' == $acf_type )
+				if ( 'user' === $acf_type )
 					update_field( $name, array($value), $object_id );
 				else 
 					update_field( $name, $value, $object_id );
@@ -262,12 +266,13 @@ class X_Editable_AJAX_Callbacks {
 		
 		if (function_exists('get_field')) {
 			// Prefix object_id with object type (taxonomy name, etc.)
-			if ( $object_name )
-				$value = get_field($field, $object_name . '_' . $post_id);
-			else
-				$value = get_field($field, $post_id);
+			if ( $object_name ) {
+				$post_id = $object_name . '_' . $post_id;
+			}
+			
+			$value = get_field($field, $post_id);
 		}
-		if ( ! $value ) {
+		else if ( ! function_exists('get_field') || ! $value ) {
 			
 			if ( 'user' === $object_name )
 				$value = get_user_meta($post_id, $field, $single);

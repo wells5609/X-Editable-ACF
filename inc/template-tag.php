@@ -2,13 +2,22 @@
 /** Generic Template Tag **/
 
 function xe_the_field( $type, $field_name, $object_id, $args = array() ) {
+	
+	if ( X_EDITABLE_ACF_ENABLE ) {
+	
+		$field_class = 'X_Editable_ACF_' . ucfirst($type);
 		
-	$field_class = 'X_Editable_ACF_' . ucfirst($type);
-	
-	if ( ! class_exists($field_class) )
-		throw new Exception("Field class {$field_class} does not exist");
-	
-	$field = new $field_class($field_name, $object_id, $args);
+		if ( ! class_exists($field_class) )
+			throw new Exception("Field class {$field_class} does not exist");
+		
+		$field = new $field_class($field_name, $object_id, $args);
+	}
+	else {
+		
+		$args['input_type'] = strtolower($type);
+		
+		$field = new X_Editable_Meta($object_id, $field_name, $args);
+	}
 	
 	extract($args);
 	
@@ -46,6 +55,10 @@ function xe_the_field( $type, $field_name, $object_id, $args = array() ) {
 	else
 		$field->html();
 	
+}
+
+function editable_field($type, $field_name, $object_id, $args = array() ){
+	xe_the_field($type, $field_name, $object_id, $args);	
 }
 
 ?>

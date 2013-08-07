@@ -1,54 +1,57 @@
 jQuery(document).ready(function() {
 	
 	jQuery('.x-editable-element').each( function() {
-	
+		
+		// vars
 		var el = jQuery(this),
 			action = "xeditable_meta_handler",
 			nonce = el.data('nonce'),
 			inputType = el.data('type'),
-			acfType = el.data('acf_type');
-		
-		
-		// used for success callbacks
-		
-		var name = el.data('name'),
+			acfType = el.data('acf_type'),
+			name = el.data('name'),
 			objectID = el.data('pk'),
-			objName = el.data('object_name');
-		
+			objName = el.data('object_name'),
+			into = '#' + name + '-' + objectID + '-content';
 		
 		if ( el.hasClass('single-value') ) {
 			
 			var isSingle = true;
 		}
 		
-		var into = '#' + name + '-' + objectID + '-content';
-		
+		var key = el.data('key');
+				
 		
 		// TEXTAREA inputs
+		
 		if ( inputType == 'textarea' ) {
+			
+			var params = {
+				action: action,
+				nonce: nonce,
+				acf_type: acfType,
+				object_name: objName,
+				key: key,	
+			};
+			
+			var success = function() {
+				jQuery(this).trigger('xe/success/meta', [into, objectID, name, objName, isSingle, inputType]);
+			}
 			
 			el.editable({
 				url: xeditable.ajaxurl,
-				params: {
-					action: action,
-					nonce: nonce,
-					acf_type: acfType,
-					object_name: objName,
-				},
-				success: function() {
-					jQuery(element).trigger('xe/success/meta', [into, objectID, name, objName, isSingle, inputType]);
-				}	
+				params: params,
+				success: success
 			});
 			
 		}
 		
 		
-		// TAXONOMY field-type
+		// TAXONOMY acf-type
+		
 		else if ( acfType == 'taxonomy' ) {
 			
 			// extra post/success vars
-			var name = el.data('name'),
-				tax = el.data('taxonomy');
+			var tax = el.data('taxonomy');
 			
 			// set success function vars
 			if ( el.data('external') == 1 ) {
@@ -56,7 +59,6 @@ jQuery(document).ready(function() {
 				var asUl = true,
 					display = false,
 					autotext = 'never';
-					
 			} 
 			else {
 			
@@ -73,13 +75,13 @@ jQuery(document).ready(function() {
 					issingle: isSingle,
 					tax: tax,
 					object_name: objName,
+					key: key,
 				},
 				display: display,
+				autotext: autotext,
 				source: xeditable.ajaxurl+'?action=xeditable_tax_options&tax='+tax,
 				success: function() {
-					
 					jQuery(into).trigger('xe/success/terms', [into, objectID, tax, asUl]);
-					
 				}
 			});
 			
@@ -88,16 +90,17 @@ jQuery(document).ready(function() {
 		// USER field-type
 		else if ( acfType == 'user' ) {
 			
-			var name = el.data('name'),
-				userRole = el.data('role');
+			var userRole = el.data('role');
 			
 			// set success function vars
-			if ( el.data('external') == 1 )
+			if ( el.data('external') == 1 ) {
+			
 				var asUl = true;
-			
-			else 
+			}
+			else {
+				 
 				var into = el.attr('id');
-			
+			}
 			
 			jQuery(this).editable({
 				url: xeditable.ajaxurl, 
@@ -107,11 +110,12 @@ jQuery(document).ready(function() {
 					acf_type: acfType,
 					issingle: isSingle,
 					object_name: objName,
+					key: key,
 				},
 				display: false,
 				source: xeditable.ajaxurl+'?action=xeditable_user_options&role='+userRole,
 				success: function() { 
-					load_xe_field(into, objectID, name, objName, isSingle)
+					jQuery(this).trigger('xe/success/meta', [into, objectID, name, objName, isSingle, inputType]);
 				}
 			});
 			
@@ -120,10 +124,13 @@ jQuery(document).ready(function() {
 		// everything else
 		else {
 			
-			if ( el.data('external') != 1 )	
+			// Not external => replace element text on success
+			if ( el.data('external') != 1 )	{
+				
 				var into = el.attr('id');
+			}
 			
-			jQuery(this).editable({
+			el.editable({
 				url: xeditable.ajaxurl,
 				params: {
 					action: action,
@@ -138,27 +145,34 @@ jQuery(document).ready(function() {
 		
 		}
 		
-			
-	});
+	}); // end ('.x-editable-element').each
 	
-	jQuery(this).on('xe/success/terms', function(event, element, objectID, tax, ul) {
+	
+	// Success hooks
+	
+	jQuery(document).on('xe/success/terms', function(event, element, objectID, tax, ul) {
 		
 		load_xe_terms(element, objectID, tax, ul);
 	
 	});
 	
-	jQuery(this).on('xe/success/meta', function(event, element, objectID, name, objName, single, input){
+	jQuery(document).on('xe/success/meta', function(event, element, objectID, name, objName, single, input){
 		
-		load_xe_field(element, objectID, name, objName, single);
-	
+		if ( jQuery(element).data('external') ) {
+			load_xe_field(element, objectID, name, objName, single);
+		}
+		
 	});
 	
-	// AJAX Post Meta loader function
+	
+	// Success callbacks
+	
+	// AJAX Post Meta loader
 	function load_xe_field(into, objectID, field, objectName, isSingle) {
 		
-		if ( ! isSingle ) {
-			var isSingle = false;	
-		}
+		// isSingle not set
+		if ( ! isSingle ) 
+			var isSingle = false;
 		
 		jQuery.ajax({
 			type: 'POST',
@@ -174,8 +188,10 @@ jQuery(document).ready(function() {
 				jQuery(into).hide().html(data).slideDown(450);	
 			}
 		});	
+		
 	}
-	// AJAX Post Terms loader function
+	
+	// AJAX Post Terms loader
 	function load_xe_terms(into, objectID, tax, ul) {
 		
 		jQuery.ajax({
@@ -191,6 +207,7 @@ jQuery(document).ready(function() {
 				jQuery(into).hide().html(data).slideDown(600);	
 			}
 		});	
+		
 	}
 
 });

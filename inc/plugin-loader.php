@@ -3,7 +3,7 @@
 // Plugin class
 class X_Editable_Plugin {
 	
-	public static $VERSION = '0.3.8';
+	public static $VERSION = '0.3.9';
 	
 	public static $XE_VERSION = '1.4.5';
 		
@@ -59,7 +59,7 @@ class X_Editable_Plugin {
 		
 		require_once X_EDITABLE_PATH . 'inc/ajax-callbacks.php';
 				
-		include_once X_EDITABLE_PATH . 'inc/template-tag.php';
+		require_once X_EDITABLE_PATH . 'inc/template-tag.php';
 		
 		
 		if ( defined('X_EDITABLE_ACF_ENABLE') && X_EDITABLE_ACF_ENABLE ) {

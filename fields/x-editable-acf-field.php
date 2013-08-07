@@ -21,18 +21,19 @@ class X_Editable_ACF_Field extends X_Editable_Meta {
 		
 		if ( strstr($meta_key, 'field_') ){
 			$field = $meta_key;
+			$this->addDataArg('key', $field);
 		}
 		else {
 				
-			if ( function_exists('get_acf_field_key') )
-				$field = get_acf_field_key($meta_key);
+			if ( function_exists('acf_field_key') )
+				$field = acf_field_key($meta_key);
 			
-			if ( ! $field || ! function_exists('get_acf_field_key') )
+			if ( ! $field || ! function_exists('acf_field_key') )
 				$field = get_field_reference($meta_key, $id);
 		}
 		
-		// found field key - but make sure value isn't "field_{field_name}"
-		if ( $field && $field !== 'field_'.$meta_key ) {
+		// found field key
+		if ( $field ) {
 			
 			$field_object = get_field_object( $field, $id );	
 			
@@ -170,7 +171,7 @@ class X_Editable_ACF_Field extends X_Editable_Meta {
 					$fieldType = $namedFields[$acf_type];
 				}
 				
-				// default 'text'
+				// default = 'text'
 				$this->setOption('input_type', apply_filters('xe/input_type/type=' . $this->fieldProp('type'), $fieldType, $this->meta) );
 				
 			}

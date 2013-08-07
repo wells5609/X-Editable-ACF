@@ -191,6 +191,12 @@ class X_Editable_Field_Functions {
 			// ACF field type
 			$echo .= 'data-acf_type="' . $field['type'] . '" ';
 			
+			// KEY
+			if ( $field['key'] ) {
+				$key = trim(str_replace('field_', '', $field['key']));
+				$echo .= 'data-key="' . $key . '" ';
+			}
+			
 			//	VALUE
 			$echo .= 'data-value="' . $html['value'] . '" ';
 					

@@ -11,10 +11,7 @@ class X_Editable_ACF_Textarea extends X_Editable_ACF_Field {
 		/* Field-specific args */
 		
 		$this->addDataArg('rows', 6);
-		$this->addDataArg('autoText', 'never');
-		$this->addDataArg('mode', 'inline');
 		$this->addDataArg('inputclass', 'input-block');
-		$this->addDataArg('display', "false"); // quote booleans so they actually print
 		
 		/* Filters */
 		
@@ -63,7 +60,7 @@ class X_Editable_ACF_Textarea extends X_Editable_ACF_Field {
 		
 		if ( empty($value) ) :
 			$this->setHtml('value', '');
-			$this->setHtml('text', 'Edit');	
+			$this->setHtml('text', '<em>Empty</em>');	
 		
 				
 		//	2.	Multiple Values
@@ -71,7 +68,7 @@ class X_Editable_ACF_Textarea extends X_Editable_ACF_Field {
 		else :
 		
 			$this->setHtml('value', $value);
-			$this->setHtml('text', "Edit");
+			$this->setHtml('text', $value);
 		
 		endif;
 		
