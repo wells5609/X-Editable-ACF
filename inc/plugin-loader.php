@@ -3,9 +3,9 @@
 // Plugin class
 class X_Editable_Plugin {
 	
-	public static $VERSION = '0.3.9';
+	public static $VERSION = '0.3.9.1';
 	
-	public static $XE_VERSION = '1.4.5';
+	public static $XE_VERSION = '1.4.6';
 		
 	public static $EDIT_CAP = 'edit_posts';
 	
@@ -94,7 +94,7 @@ class X_Editable_Plugin {
 			wp_enqueue_style('x-editable');
 			
 			wp_enqueue_script('x-editable-js');
-			wp_localize_script(	'x-editable-js', 'xeditable', array( 'ajaxurl' => admin_url('admin-ajax.php') ) );	
+			wp_localize_script(	'x-editable-js', 'xeditable', array( 'ajaxurl' => network_admin_url('admin-ajax.php') ) );	
 			
 			self::$SCRIPTS_ENQUEUED = true;
 		}
