@@ -2,43 +2,35 @@
 
 class X_Editable_AJAX_Callbacks {
 	
-	public static $NO_PRIV_CALLBACK = false;
+	public static $NO_PRIV_CALLBACK = array(__CLASS__, 'must_log_in');
 	
 	public static function init() {
 		
 		$no_priv = apply_filters('xe/callbacks/no_priv', self::$NO_PRIV_CALLBACK);
-		
-		if ( ! $no_priv ){
-			$no_priv = array(__CLASS__, 'must_log_in');	
-		}
-		
+				
 		// Meta edit 
 		add_action( 'wp_ajax_xeditable_meta_handler', array(__CLASS__, 'meta_handler') );
 		add_action( 'wp_ajax_nopriv_xeditable_meta_handler', $no_priv );
+		
+		// Taxonomy edit
+		add_action( 'wp_ajax_xeditable_tax_handler', array(__CLASS__, 'tax_handler') );
+		add_action( 'wp_ajax_nopriv_xeditable_tax_handler', $no_priv );
 		
 		// Meta load
 		add_action( 'wp_ajax_xeditable_meta_load', array(__CLASS__, 'load_meta') );
 		add_action( 'wp_ajax_nopriv_xeditable_meta_load', $no_priv );
 		
-		// Gets user options (for meta)
-		add_action( 'wp_ajax_xeditable_user_options', array(__CLASS__, 'user_options') );
-		add_action( 'wp_ajax_nopriv_xeditable_user_options', $no_priv );
+		// Term load
+		add_action( 'wp_ajax_xeditable_term_load', array(__CLASS__, 'load_terms') );
+		add_action( 'wp_ajax_nopriv_xeditable_term_load', $no_priv );
 		
 		// Gets taxonomy options (terms)
 		add_action( 'wp_ajax_xeditable_tax_options', array(__CLASS__, 'tax_options') );
 		add_action( 'wp_ajax_nopriv_xeditable_tax_options', $no_priv );
 		
-		// Taxonomy (ACF) field
-		add_action( 'wp_ajax_xeditable_acf_taxonomy', array(__CLASS__, 'tax_handler') );
-		add_action( 'wp_ajax_nopriv_xeditable_acf_taxonomy', $no_priv );
-		
-		// DEPR -- Taxonomy edit
-		add_action( 'wp_ajax_xeditable_tax_handler', array(__CLASS__, 'tax_handler') );
-		add_action( 'wp_ajax_nopriv_xeditable_tax_handler', $no_priv );
-		
-		// Term load
-		add_action( 'wp_ajax_xeditable_term_load', array(__CLASS__, 'load_terms') );
-		add_action( 'wp_ajax_nopriv_xeditable_term_load', $no_priv );
+		// Gets user options (for meta)
+		add_action( 'wp_ajax_xeditable_user_options', array(__CLASS__, 'user_options') );
+		add_action( 'wp_ajax_nopriv_xeditable_user_options', $no_priv );
 			
 	}
 	
@@ -48,7 +40,7 @@ class X_Editable_AJAX_Callbacks {
 	
 	// user not logged in
 	public function must_log_in() {
-		header('HTTP 400 Bad Request', true, 400);
+		status_header('400');
 		exit('You must log in.');
 	}
 	
@@ -56,21 +48,22 @@ class X_Editable_AJAX_Callbacks {
 	public function meta_handler() {
 	
 		$object_id = $_POST['pk']; // post id.
-		$name = trim($_POST['name']); // the ACF field key
-		$value = wp_kses_stripslashes($_POST['value']); // uses "data-value" if present, otherwise html contents.
-		$acf_type = trim($_POST['acf_type']);
-		$object_name = trim($_POST['object_name']); // if we're editing Term, User, etc. (not set for Post)
+		$name = trim($_POST['name']); // the (ACF) field/meta key
+		$value = wp_filter_kses( trim($_POST['value']) ); // uses "data-value" if present, otherwise html contents.
 		
-		// nonce must match name.
+		$object_name = trim($_POST['object_name']); // if we're editing Term, User, etc. (not set for Post)
+		$acf_type = trim($_POST['acf_type']);
+		$field_key = trim($_POST['key']);
+		
+		// verify nonce using name
 		if ( ! wp_verify_nonce( $_POST['nonce'], $name )) {
-			header('HTTP 400 Bad Request', true, 400);
+			status_header('400');
 			exit('Wise guy, huh?');
 		}
 		
-		// If value is not blank, update post meta
-		// Using !is_null() allows us to post '0' or 'false' as the value.
+		// Checking with is_null() allows us to post '0' or 'false' as the value.
 		if ( is_null($value) ) {
-			header('HTTP 400 Bad Request', true, 400);
+			status_header('400');
 			exit("Cannot post nothing.");
 		}
 		
@@ -79,18 +72,19 @@ class X_Editable_AJAX_Callbacks {
 		}
 		else {
 			
-			if ( function_exists('update_field') && isset($acf_type) ) {
+			if ( function_exists('update_field') && $acf_type ) {
 				
-				// Prefix object_id with object type (taxonomy name, etc.)
+				// Prefix object_id with object type (taxonomy slug, etc.)
 				if ( $object_name )
 					$object_id = $object_name . '_' . $object_id;
 				
-				if ( isset($_POST['key']) && $_POST['key'] ) {
-					$name = 'field_' . $_POST['key'];	
+				// use key to update, if possible
+				if ( $field_key && ( $field_key !== $name ) ) {
+					$name = 'field_' . $field_key;	
 				}
 				
-				// forget why I did this, but I assume there was a reason...
 				if ( 'user' === $acf_type )
+					// forget why I did this but assume there was a reason
 					update_field( $name, array($value), $object_id );
 				else 
 					update_field( $name, $value, $object_id );
@@ -114,57 +108,42 @@ class X_Editable_AJAX_Callbacks {
 		$object_id = (int) $_POST['pk']; // the POST ID.
 		$name = trim($_POST['name']); // the field name - used for nonce
 		$taxonomy = trim($_POST['tax']); // will be the taxonomy name
-		$value = wp_kses_stripslashes( $_POST['value'] );
+		$value = $_POST['value'];
 		$single = $_POST['issingle'];
 	
 		if ( ! wp_verify_nonce( $_POST['nonce'], $name )) {
-			header('HTTP 400 Bad Request', true, 400);
+			status_header('400');
 			exit('Wise guy, huh?');
 		}
 		
 		if ( has_action('xe/update_tax') ) {
 			do_action('xe/update_tax', $_POST);
 		}
+		elseif ( ! $value ) {
+			// empty value, but ID and tax were passed => set to empty array and exit
+			if ($object_id && $taxonomy)
+				return wp_set_object_terms($object_id, array(), $taxonomy, $single);
+			die;
+		}
 		else {
-				
-			if ( ! $value ) {
-				if ($object_id && $taxonomy)
-					wp_set_object_terms($object_id, array(), $taxonomy, $single);
-				else die;
-			}
-		
+			
 			$terms = array();
 			
-			if ( is_string($value) ) {
-				if ( ! is_numeric($value) )
-					$exists = get_term_by('name', $value, $taxonomy);
-				else
-					$exists = get_term_by('id', $value, $taxonomy);	
-				
-				if ( ! $exists ) {
-					$term = wp_insert_term($value, $taxonomy);
-					$term_id = $term['term_id'];
-				}
-				else {
-					// value is probably an ID
-					if ( is_numeric($value) )
-						$term_id = $value;	
-					else
-						$term_id = $exists->term_id;
-				}
-				
-				$terms[] = (int) $term_id;	
-			}
-			elseif ( is_array($value) ) {
+			if ( is_array($value) ) {
 				foreach($value as $val) :
-					$terms[] = (int) $val;	
+					
+					$terms[] = process_term($val, $taxonomy);
+					
 				endforeach;
 			}
-			elseif ( $single ) {
-				$terms = (int) $value;
-			}
 			else {
-				$terms[] = (int) $value;
+				
+				// if single, save value not in array
+				if ( $single )
+					$terms = process_term($value, $taxonomy);
+								
+				else
+					$terms[] = process_term($value, $taxonomy);
 			}
 			
 			wp_set_object_terms($object_id, $terms, $taxonomy, $single);
@@ -285,5 +264,35 @@ class X_Editable_AJAX_Callbacks {
 }
 
 X_Editable_AJAX_Callbacks::init();
+
+
+function process_term($term_id, $taxonomy, $args = array()){
+	$parent = 0;
+		
+	$use_ids = is_taxonomy_hierarchical($taxonomy);
+
+	if ( $use_ids && isset($args['parent']) )
+		$parent = $args['parent'];
+	
+	if ( term_exists((int)$term_id, $taxonomy, $parent) ) {
+	
+		if ( $use_ids )
+			return (int) $term_id;
+		else
+			return get_term_by('id', $term_id, $taxonomy)->name;
+	}
+
+	// term does not exist => insert
+	$new_term = wp_insert_term((int)$term_id, $taxonomy, $args);
+	$new_term_id = $new_term['term_id'];
+	
+	// taxonomy is hierarchical => use IDs
+	if ( $use_ids )
+		return (int) $new_term_id;
+	// tax not heirarchical (e.g. tags) => use names
+	else
+		return get_term_by('id', $new_term_id, $taxonomy)->name;
+	
+}
 
 ?>

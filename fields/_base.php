@@ -91,6 +91,7 @@ class X_Editable_Meta {
 			// Load scripts only if user can edit
 			if ( XE_CAN_EDIT )
 				X_Editable_Plugin::enqueue_scripts();
+			
 			// make output uneditable
 			else
 				$this->setHtml('tag', 'span');
@@ -214,6 +215,7 @@ class X_Editable_Meta {
 				}
 				public function setMeta( $name, $value ) {
 					$this->meta[$name] = $value;
+					return $this;
 				}
 				public function hasMeta($name) {				
 					if ( isset($this->meta[$name]) && ! empty($this->meta[$name]) )
@@ -231,6 +233,7 @@ class X_Editable_Meta {
 				}
 				public function setHtml( $name, $value ) {
 					$this->html[$name] = $value;
+					return $this;
 				}
 				public function hasHtml($name) {				
 					if ( isset($this->html[$name]) && ! empty($this->html[$name]) )
@@ -249,6 +252,7 @@ class X_Editable_Meta {
 				
 				public function setOption( $name, $value ) {
 					$this->options[$name] = $value;
+					return $this;
 				}
 				
 				public function hasOption($name) {				
@@ -282,6 +286,7 @@ class X_Editable_Meta {
 					else {
 						$this->html['data_args'][$name] = $value;
 					}
+					return $this;
 				}
 				
 				public final function hasDataArg($name){
@@ -318,6 +323,7 @@ class X_Editable_Meta {
 					else {
 						$this->html['css_class'][] = $name;
 					}
+					return $this;
 				}
 				
 				public final function hasCssClass($name){
@@ -336,6 +342,7 @@ class X_Editable_Meta {
 		
 			public final function setCap($name, $cap) {
 				$this->caps[$name] = $cap;
+				return $this;
 			}
 			
 		
@@ -373,6 +380,8 @@ class X_Editable_Meta {
 			public function set_input_type( $input_type ) {
 				
 				$this->setOption('input_type', apply_filters('xe/input_type', $input_type, $this->meta, $this->options) );
+				
+				return $this;
 			}
 	
 	
@@ -381,12 +390,12 @@ class X_Editable_Meta {
 	================ */
 	
 	
-		/** show_label
+		/** showLabel
 		 *
 		 *	Shows a label.
 		 * 
 		 *	@param array attributes Attributes for label.
-		 * 	@return string HTML output for label
+		 * 	@return string Echoes HTML output for label
 		 *
 		 */
 			public final function showLabel(array $attributes = NULL) {
@@ -397,11 +406,29 @@ class X_Editable_Meta {
 				
 					do_action('xe/create_label', $this->meta, $attributes);	
 				}
-				
 			}
 		
 		
-		/** show_values
+		/** returnLabel
+		 *
+		 *	Returns a label.
+		 * 
+		 *	@param array attributes Attributes for label.
+		 * 	@return string HTML output for label
+		 *
+		 */
+			public final function returnLabel(array $attributes = NULL){
+				
+				$this->checkSetup();
+								
+				if ( ! $this->getCap('view') || current_user_can( $this->getCap('view') ) ) {
+				
+					do_action('xe/create_label', $this->meta, $attributes, true);	
+				}
+			}
+		
+		
+		/** showValues
 		 *
 		 *	Shows values externally.
 		 * 
@@ -411,7 +438,7 @@ class X_Editable_Meta {
 		 */ 
 			public final function showValues( $as_ul = false ) {
 				
-				$this->addDataArg('show_values', true);
+				$this->addDataArg('external', true);
 				
 				$this->checkSetup();
 				
@@ -419,8 +446,25 @@ class X_Editable_Meta {
 				
 					do_action_ref_array('xe/create_external', array($this->id, $this->meta, $this->html, $as_ul));
 				}
-				
 			}	
+		
+		
+		/** returnValues
+		 *
+		 *	Returns values externally
+		 * 
+		 */
+			public final function returnValues( $as_ul = false ) {
+				
+				$this->addDataArg('external', true);
+				
+				$this->checkSetup();
+				
+				if ( ! $this->getCap('view') || current_user_can( $this->getCap('view') ) ) {
+				
+					do_action_ref_array('xe/create_external', array($this->id, $this->meta, $this->html, $as_ul, true));
+				}
+			}
 	
 			
 		/**	html
@@ -439,7 +483,25 @@ class X_Editable_Meta {
 				
 					do_action('xe/create_element', $this->meta, $this->id, $this->html, $this->options);
 				}
+			}
+	
+	
+		/**	returnHtml
+		 *
+		 *	Returns element HTML output
+		 *	
+		 * 	@return string HTML output for element
+		 * 
+		 */
+			
+			public final function returnHtml() {
 				
+				$this->checkSetup();
+				
+				if ( ! $this->getCap('view') || current_user_can( $this->getCap('view') ) ) {
+				
+					do_action('xe/create_element', $this->meta, $this->id, $this->html, $this->options, true);
+				}
 			}
 	
 
@@ -544,7 +606,7 @@ class X_Editable_Meta {
 			if ( $this->getOption('show_external') || $this->getDataArg('external') ) 
 				$this->addCssClass('values-external');
 			
-			if ( $this->getOption('edit_link') || 'edit' === strtolower( $this->getHtml('text') ) )			
+			if ( $this->getDataArg('edit_link') || $this->getOption('edit_link') || 'edit' === strtolower( $this->getHtml('text') ) )			
 				$this->addCssClass('edit-link');
 
 			$this->html['css_class'] = apply_filters('xe/html/css_class', $this->html['css_class'], $this->meta, $this->options);
@@ -573,12 +635,8 @@ class X_Editable_Meta {
 			}
 			
 			return $json;
-			
 		}
 
-	
 }
-
-
 
 ?>

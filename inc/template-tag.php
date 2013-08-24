@@ -8,7 +8,7 @@ function xe_the_field( $type, $field_name, $object_id, $args = array() ) {
 		$field_class = 'X_Editable_ACF_' . ucfirst($type);
 		
 		if ( ! class_exists($field_class) )
-			throw new Exception("Field class {$field_class} does not exist");
+			return "Field class {$field_class} does not exist";
 		
 		$field = new $field_class($field_name, $object_id, $args);
 	}
@@ -50,15 +50,15 @@ function xe_the_field( $type, $field_name, $object_id, $args = array() ) {
 			$field->showValues($values_as_ul);	
 			$field->html();
 		}
-		
 	}
 	else
 		$field->html();
-	
 }
 
+// wrapper for xe_the_field()
 function editable_field($type, $field_name, $object_id, $args = array() ){
 	xe_the_field($type, $field_name, $object_id, $args);	
 }
+
 
 ?>

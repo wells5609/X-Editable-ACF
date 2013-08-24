@@ -19,31 +19,27 @@ class X_Editable_ACF_Field extends X_Editable_Meta {
 			$this->addDataArg('object', $options['object']);
 		}
 		
+		// key was given
 		if ( strstr($meta_key, 'field_') ){
 			$field = $meta_key;
 			$this->addDataArg('key', $field);
 		}
-		else {
-				
+		else {	
 			if ( function_exists('acf_field_key') )
 				$field = acf_field_key($meta_key);
-			
+				
 			if ( ! $field || ! function_exists('acf_field_key') )
 				$field = get_field_reference($meta_key, $id);
 		}
 		
-		// found field key
-		if ( $field ) {
-			
-			$field_object = get_field_object( $field, $id );	
-			
-			$this->setHtml('label', $field_object['label']);
+		$field_object = get_field_object( $field, $id );	
 		
-			$this->meta = $field_object; // this is important
-			
-			$this->set_input_type();
-		}
+		$this->setHtml('label', $field_object['label']);
+	
+		$this->meta = $field_object; // this is important
 		
+		$this->set_input_type();
+				
 	}
 	
 	
@@ -76,18 +72,17 @@ class X_Editable_ACF_Field extends X_Editable_Meta {
 			
 			$multi_value_fields = apply_filters('xe/field_types/multiple_values', $multi_value_fields);
 			
-			if ( isset($ft) && in_array( $ft, $multi_value_fields ) ) {
+			if (isset($ft) && in_array( $ft, $multi_value_fields ) )
 				return false;
-			}
-			elseif ( isset($val) && is_array($val) ) {
+				
+			elseif (isset($val) && is_array($val) )
 				return false;
-			}
-			elseif ( isset($multi) && ( (true||1) != $multi ) ) {
+			
+			elseif (isset($multi) && ! $multi )
 				return false;
-			}
-			else {
+			
+			else
 				return true;
-			}
 		}
 		
 		

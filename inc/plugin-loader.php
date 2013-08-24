@@ -3,7 +3,7 @@
 // Plugin class
 class X_Editable_Plugin {
 	
-	public static $VERSION = '0.3.9.1';
+	public static $VERSION = '0.4';
 	
 	public static $XE_VERSION = '1.4.6';
 		
@@ -11,8 +11,7 @@ class X_Editable_Plugin {
 	
 	public static $FIELDS = array();
 	
-	public static $SCRIPTS_ENQUEUED = false;
-		
+	
 	public $default_fields = array(
 			'text',
 			'number',
@@ -29,53 +28,59 @@ class X_Editable_Plugin {
 	public $default_user_field_path;
 	
 	
-	function __construct() {		
+	public static function getInstance() {
+		static $instance;
+		$class = __CLASS__;	
+		if ( ! $instance instanceof $class) {
+			$instance = new $class;
+		}
+		return $instance;
+	}
 	
-		// Can user edit?
-		self::$EDIT_CAP = apply_filters('xe/edit_cap', self::$EDIT_CAP);
-		 
+	private function __construct() {		
+	
+		self::$EDIT_CAP	=	apply_filters('xe/edit_cap', self::$EDIT_CAP);
+				 
 		// Constant must be set for fields to load
-		if ( current_user_can(self::$EDIT_CAP) ) {
+		if ( current_user_can(self::$EDIT_CAP) )
 			define('XE_CAN_EDIT', true);
-		}
-		else {
-			define('XE_CAN_EDIT', false);
-		}
 		
-		// Plugins can also set this manually
-		if ( current_theme_supports('x-editable-acf') ) {
-			define('X_EDITABLE_ACF_ENABLE', true);
-		}
+		else
+			define('XE_CAN_EDIT', false);
+		
+		
+		require_once	X_EDITABLE_PATH . 'fields/_base.php';
+		require_once	X_EDITABLE_PATH . 'inc/field-functions.php';
+		require_once	X_EDITABLE_PATH . 'inc/template-tag.php';
+		require_once	X_EDITABLE_PATH . 'inc/ajax-callbacks.php';
+	//	require_once	X_EDITABLE_PATH . 'inc/xeditable-scripts.php';
+		
 		
 		// user-registered fields
-		$this->user_fields = apply_filters('xe/user_fields', $this->user_fields);
+		$this->user_fields	=	apply_filters('xe/user_fields', $this->user_fields);
 		
 		// Default user field path is 'fields' directory of theme
-		$this->default_user_field_path = apply_filters('xe/user_field_path', get_stylesheet_directory().'/fields/');
+		$this->default_user_field_path	=	trailingslashit( apply_filters('xe/user_field_path', get_stylesheet_directory().'/fields/') );
 		
-		require_once X_EDITABLE_PATH . 'fields/_base.php';
-		
-		require_once X_EDITABLE_PATH . 'inc/field-functions.php';
-		
-		require_once X_EDITABLE_PATH . 'inc/ajax-callbacks.php';
-				
-		require_once X_EDITABLE_PATH . 'inc/template-tag.php';
-		
+			
+		// Plugins can also set this manually
+		if ( current_theme_supports('x-editable-acf') )
+			define('X_EDITABLE_ACF_ENABLE', true);
 		
 		if ( defined('X_EDITABLE_ACF_ENABLE') && X_EDITABLE_ACF_ENABLE ) {
 
-			require_once X_EDITABLE_PATH . 'fields/x-editable-acf-field.php';
+			require_once	X_EDITABLE_PATH . 'fields/x-editable-acf-field.php';
 			
 			// Add admin page if user has edit cap
-			if ( XE_CAN_EDIT && is_admin() ) {
-				include_once X_EDITABLE_PATH . 'views/admin.php';
-			}
+			if ( XE_CAN_EDIT && is_admin() )
+				include_once	X_EDITABLE_PATH . 'views/admin.php';
 		}
 		
 		$this->register_scripts();
-		$this->load_fields();
+		$this->load_fields();	
 	}
-		
+
+
 	private function register_scripts() {
 		
 		// Bootstrap editable css
@@ -87,19 +92,23 @@ class X_Editable_Plugin {
 		
 	}
 	
-	public static function enqueue_scripts() {
-			
-		if ( ! self::$SCRIPTS_ENQUEUED ) {
+	
+	public function enqueue_scripts() {
+		
+		static $enqueued = false;
+		
+		if ( ! $enqueued ) {
 					
 			wp_enqueue_style('x-editable');
 			
 			wp_enqueue_script('x-editable-js');
-			wp_localize_script(	'x-editable-js', 'xeditable', array( 'ajaxurl' => network_admin_url('admin-ajax.php') ) );	
+			wp_localize_script('x-editable-js', 'xeditable', array( 'ajaxurl' => network_admin_url('admin-ajax.php') ) );	
 			
-			self::$SCRIPTS_ENQUEUED = true;
+			$enqueued = true;
 		}
 
 	}
+	
 	
 	private function load_fields() {
 		
@@ -132,6 +141,6 @@ class X_Editable_Plugin {
 	
 }
 
-new X_Editable_Plugin;
+X_Editable_Plugin::getInstance();
 
 ?>

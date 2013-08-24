@@ -3,10 +3,10 @@
 Plugin Name: X-Editable (ACF)
 Plugin URI: https://github.com/wells5609/X-Editable-ACF
 Description: Edit Advanced Custom Fields from the front-end using X-Editable. Extends a base class that works with native WordPress meta.
-Version: 0.3.9.1
-Author: Wells Peterson
+Version: 0.4
+Author: wells
 License: GPL
-Copyright: Wells Peterson
+Copyright: wells 2013
 */
 
 // Plugin setup

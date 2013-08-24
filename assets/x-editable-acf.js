@@ -22,8 +22,10 @@ jQuery(document).ready(function() {
 				
 		
 		// TEXTAREA inputs
-		
 		if ( inputType == 'textarea' ) {
+			
+			if ( ! el.data('external') )
+				var into = el.attr('id');
 			
 			var params = {
 				action: action,
@@ -47,7 +49,6 @@ jQuery(document).ready(function() {
 		
 		
 		// TAXONOMY acf-type
-		
 		else if ( acfType == 'taxonomy' ) {
 			
 			// extra post/success vars
@@ -70,7 +71,7 @@ jQuery(document).ready(function() {
 			jQuery(this).editable({
 				url: xeditable.ajaxurl, 
 				params: {
-					action: 'xeditable_acf_taxonomy',
+					action: 'xeditable_tax_handler',
 					nonce: nonce,
 					issingle: isSingle,
 					tax: tax,
@@ -145,22 +146,26 @@ jQuery(document).ready(function() {
 		
 		}
 		
-	}); // end ('.x-editable-element').each
+	});
 	
 	
 	// Success hooks
+	
+	jQuery(document).on('xe/success/meta', function(event, element, objectID, name, objName, single, input){
+		
+		load_xe_field(element, objectID, name, objName, single);
+		
+		jQuery(document).trigger('xe/success/meta/after', [element, objectID, name, objName, single, input]);
+		
+		console.log(element);
+		
+	});
 	
 	jQuery(document).on('xe/success/terms', function(event, element, objectID, tax, ul) {
 		
 		load_xe_terms(element, objectID, tax, ul);
 	
-	});
-	
-	jQuery(document).on('xe/success/meta', function(event, element, objectID, name, objName, single, input){
-		
-		if ( jQuery(element).data('external') ) {
-			load_xe_field(element, objectID, name, objName, single);
-		}
+		jQuery(document).trigger('xe/success/terms/after', [element, objectID, tax, ul]);
 		
 	});
 	

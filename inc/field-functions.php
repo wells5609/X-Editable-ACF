@@ -10,11 +10,11 @@ class X_Editable_Field_Functions {
 	
 	public static function init() {
 		
-		add_action( 'xe/create_external', array(__CLASS__, 'create_external'), 5, 4);
+		add_action( 'xe/create_external', array(__CLASS__, 'create_external'), 5, 5);
 			
-		add_action( 'xe/create_element', array(__CLASS__, 'create_element'), 5, 4);
+		add_action( 'xe/create_element', array(__CLASS__, 'create_element'), 5, 5);
 		
-		add_action( 'xe/create_label', array(__CLASS__, 'create_label'), 5, 2);
+		add_action( 'xe/create_label', array(__CLASS__, 'create_label'), 5, 3);
 		
 	}
 		
@@ -25,7 +25,7 @@ class X_Editable_Field_Functions {
 	 *	Basically, it shows the field values outside the editable HTML element (usually <a>)
 	 *
 	 */
-		public static function create_external( $id, $field, $html, $as_ul ) {
+		public static function create_external( $id, $field, $html, $as_ul, $return = false ) {
 			
 			$echo = '';
 			
@@ -111,6 +111,9 @@ class X_Editable_Field_Functions {
 			
 			do_action('xe/external/after', $field);
 			
+			if ( $return )
+				return $echo;
+			
 			echo $echo;
 		}
 	
@@ -120,7 +123,7 @@ class X_Editable_Field_Functions {
 	 *	Creates a label to be shown before the element.
 	 *
 	 */
-		public static function create_label( $field, array $attributes = NULL ) {
+		public static function create_label( $field, array $attributes = NULL, $return = false ) {
 			
 			if ( $field['label'] ) {
 				
@@ -140,17 +143,22 @@ class X_Editable_Field_Functions {
 				
 				do_action('xe/label/before', $field);
 				
-				echo '<'.$html['tag'].' ';
+				$echo = '<'.$html['tag'].' ';
 					
 				foreach($html['attributes'] as $attr => $val) :
 					if ( isset($val) && is_array($val) )
 						$val = implode(' ', $val);
-					echo $attr . '="' . $val . '" ';
+					$echo .= $attr . '="' . $val . '" ';
 				endforeach;
 				
-				echo '>' . $html['text'] . '</'.$html['tag'].'>';
+				$echo .= '>' . $html['text'] . '</'.$html['tag'].'>';
 			
 				do_action('xe/label/after', $field);
+				
+				if ( $return )
+					return $echo;
+					
+				echo $echo;
 			}
 		}
 	
@@ -161,7 +169,7 @@ class X_Editable_Field_Functions {
 	 *	Well, most of it
 	 *
 	 */ 
-		public static function create_element( $field, $object_id, $html, $options ) {
+		public static function create_element( $field, $object_id, $html, $options, $return = false ) {
 			
 			$echo = '';
 					
@@ -235,9 +243,13 @@ class X_Editable_Field_Functions {
 			// close tag	
 			$echo .= '</' . $html['tag'] . '>';
 			
+			do_action( 'xe/element/after', $field );	
+				
+			if ( $return )
+				return $echo;
+			
 			echo $echo;
 			
-			do_action( 'xe/element/after', $field );		
 		}
 	
 }
