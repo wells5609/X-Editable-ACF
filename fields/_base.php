@@ -12,6 +12,7 @@ class X_Editable_Meta {
 	 */ 
 		 $id,
 
+
 	/** meta	
 	 * 
 	 * 	@var array
@@ -84,48 +85,43 @@ class X_Editable_Meta {
 	
 		// constructor
 		public function __construct( $id, $meta_key, $args = array() ) {
-						
-			if ( ! defined('XE_CAN_EDIT') )
-				exit;
 			
-			// Load scripts only if user can edit
-			if ( XE_CAN_EDIT )
-				X_Editable_Plugin::enqueue_scripts();
+			/** Checks if user is able to edit (add_action with priority 1)
+			*	If so, scripts are enqueued, otherwise element set to 'span' (default: 'a')
+			*/
+			do_action('xe/before_construct', $this, $meta_key, $id, $args);			
 			
-			// make output uneditable
-			else
-				$this->setHtml('tag', 'span');
-		
-			// set vars
+			
 			$this->id = (int) $id;
-			
-			
-			// args passed?
+						
+			// args
 			if ( isset($args['object']) && $args['object'] ) {
 				$this->setOption('object', $args['object']);	
 			}
 			
 			if ( isset($args['single']) && $args['single'] ) {
 				$this->setMeta('single', $args['single']);
-				unset($args['single']); // unset before options merge (see below)
+				unset($args['single']); // unset before merged with Options
 			}
 			
-		
 			// Options - add unknown args
-			$options = array_merge($this->options, $args);
-			$this->options = apply_filters('xe/construct/options', $options, $meta_key);
+			$this->options = apply_filters('xe/construct/options', 
+				array_merge($this->options, $args), 
+				$meta_key
+			);
 			
 			
-			// Using ACF?
+			// Using ACF => Bypass rest of setup
 			if ( true === $args['_acf'] ) {
 				$this->acf_setup($this->id, $meta_key, $this->options);
 			}
-			
+			// Not using ACF => make best guess for default value, text, label
 			else {
 			
 				$this->setMeta('key', $meta_key);
 				$this->setMeta('name', $meta_key);
 				
+				// Post or user meta?
 				if ( 'post' === $this->getOption('object') ) {
 				
 					$this->setMeta('value', get_post_meta($id, $this->getMeta('key'), $this->getMeta('single')));
@@ -140,17 +136,27 @@ class X_Editable_Meta {
 					$this->setMeta('value', $this->meta['value'][0]);
 				}
 				
+				// hackish str_replace/see-saw to get a decent label from meta_key
 				if ( ! $this->hasOption('label') && ! $this->hasMeta('label') ) {
-				
+					
 					$this->setMeta('label', ucwords( implode(' ', explode( '_', str_replace('-', ' ', $meta_key) )) ));
 				}
 			}
 			
-			// Default capability to edit: 'edit_posts'
-			$this->setCap('edit', apply_filters('xe/caps/edit/name=' . $meta_key, 'edit_posts', $this->meta));
-			// No default view capability (i.e. anyone can view)
-			$this->setCap('view', apply_filters('xe/caps/view/name='. $meta_key, false, $this->meta));
 			
+			// Default capability to edit: 'edit_posts' (takes precedent over plugin-wide edit capability)
+			$this->setCap('edit', apply_filters('xe/caps/edit/name=' . $meta_key, 
+				'edit_posts', 
+				$this->meta
+			));
+			
+			// No default view capability (i.e. anyone can view)
+			$this->setCap('view', apply_filters('xe/caps/view/name='. $meta_key, 
+				false, 
+				$this->meta
+			));
+			
+			do_action('xe/after_construct', $this);
 			
 		}
 		
@@ -379,7 +385,11 @@ class X_Editable_Meta {
 		 
 			public function set_input_type( $input_type ) {
 				
-				$this->setOption('input_type', apply_filters('xe/input_type', $input_type, $this->meta, $this->options) );
+				$this->setOption('input_type', apply_filters('xe/input_type', 
+					$input_type, 
+					$this->meta, 
+					$this->options
+				) );
 				
 				return $this;
 			}
@@ -423,7 +433,7 @@ class X_Editable_Meta {
 								
 				if ( ! $this->getCap('view') || current_user_can( $this->getCap('view') ) ) {
 				
-					do_action('xe/create_label', $this->meta, $attributes, true);	
+					do_action('xe/create_label', $this->meta, $attributes, true);
 				}
 			}
 		
@@ -522,30 +532,55 @@ class X_Editable_Meta {
 			$value = $this->getMeta('value');
 			
 			$this->setHtml('value', 
-				apply_filters('xe/html/value', $value, $this->meta, $this->options)
+				apply_filters('xe/html/value', 
+					$value, 
+					$this->meta, 
+					$this->options
+				)
 			);				
 			
 			
-			// Text
+			/** ------------ Text ------------ */
+			
+			// empty
+			// filter: xe/html/text/empty
 			
 			if ( empty($value) ) {
 			
 				$this->setHtml('text', 
-					apply_filters('xe/html/text/empty', 'Empty', $this->meta, $this->options)
+					apply_filters('xe/html/text/empty', 
+						'Empty', 
+						$this->meta, 
+						$this->options
+					)
 				);
 			}
+			
+			// edit_link
+			// filter: xe/html/text/edit_link
 			
 			elseif ( $this->getOption('edit_link') ) {
 				
 				$this->setHtml('text', 
-					apply_filters('xe/html/text/edit_link', 'Edit', $this->meta, $this->options)
+					apply_filters('xe/html/text/edit_link', 
+						'Edit', 
+						$this->meta, 
+						$this->options
+					)
 				);
 			}
+			
+			// has value
+			// filter: xe/html/text
 			
 			else {
 			
 				$this->setHtml('text', 
-					apply_filters('xe/html/text', $value, $this->meta, $this->options)
+					apply_filters('xe/html/text', 
+						$value, 
+						$this->meta, 
+						$this->options
+					)
 				);
 			}
 				
@@ -555,16 +590,18 @@ class X_Editable_Meta {
 	/**	setupSource
 	 *
 	 *	Sets html['source'] for fields with 'choices' (ACF only)
+	 *	
+	 *	Can be overwritten by fields
 	 */
 		protected function setupSource() {
 			
 			if ( isset($this->meta['choices']) ) {
 				$this->setHtml('source', $this->to_json($this->meta['choices']));
-			}						
+			}					
 		}
 	
 	
-	/**	setupSource
+	/**	checkSetup
 	 *
 	 * 	Checks if field is setup and runs setup() if not.
 	 */
@@ -586,9 +623,10 @@ class X_Editable_Meta {
 			$this->setupCssClass();
 			$this->setupSource();
 			
+			$this->_is_setup = true;	
+		
 			do_action('xe/field_setup', $this);
 			
-			$this->_is_setup = true;	
 		}
 	
 	
@@ -606,10 +644,16 @@ class X_Editable_Meta {
 			if ( $this->getOption('show_external') || $this->getDataArg('external') ) 
 				$this->addCssClass('values-external');
 			
-			if ( $this->getDataArg('edit_link') || $this->getOption('edit_link') || 'edit' === strtolower( $this->getHtml('text') ) )			
+			if ( $this->getDataArg('edit_link') 
+			|| $this->getOption('edit_link') 
+			|| 'edit' === strtolower($this->getHtml('text')) )		
 				$this->addCssClass('edit-link');
 
-			$this->html['css_class'] = apply_filters('xe/html/css_class', $this->html['css_class'], $this->meta, $this->options);
+			$this->html['css_class'] = apply_filters('xe/html/css_class', 
+				$this->html['css_class'], 
+				$this->meta, 
+				$this->options
+			);
 		}
 	
 		
@@ -620,9 +664,7 @@ class X_Editable_Meta {
 	 * 	@param mixed data The data to jsonify and return
 	 * 	@param boolean as_string Whether to return as JSON string (default:false). If false, uses JSON_FORCE_OBJECT
 	 *	@return string JSON-encoded string
-	 *
 	 */
-		
 		public function to_json( $data, $as_string = false ) {
 			
 			// Don't restrict user input to existing choices

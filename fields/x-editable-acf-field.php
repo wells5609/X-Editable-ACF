@@ -38,7 +38,7 @@ class X_Editable_ACF_Field extends X_Editable_Meta {
 	
 		$this->meta = $field_object; // this is important
 		
-		$this->set_input_type();
+		$this->set_input_type(); // only works w/o arg because overwritten below
 				
 	}
 	
@@ -95,8 +95,8 @@ class X_Editable_ACF_Field extends X_Editable_Meta {
 	 *
 	 *	@description: sets html['value'] and html['text'] vars
 	 *
-	 *	Most fields should overwrite this function
-	 *
+	 *	Fields can overwrite this function.
+	 *	Alternatively, use filters (for less intensive changes)
 	**/
 		
 		protected function set_value_and_text() {
@@ -104,34 +104,40 @@ class X_Editable_ACF_Field extends X_Editable_Meta {
 			$type = $this->fieldProp('type');
 			$value = $this->fieldProp('value');
 			
-			// Has return_format
+			// set text defaults
+			$text = $value;
+			if ( empty($value) )
+				$text = '<em>Empty</em>';
+
+			// has return_format
 			if ( $rtn_format = $this->fieldProp('return_format') ) {
 				
-				// Value
-				$this->setHtml('value', apply_filters('xe/html/value/type=' . $type . '/format=' . $rtn_format, $value));				
+				// value filter: xe/html/value/type={ACF-type}/format={ACF-return-format}
+				$this->setHtml('value', 
+					apply_filters('xe/html/value/type=' . $type . '/format=' . $rtn_format, $value)
+				);				
 				
-				// Text
-				if ( empty($value) ) {
-					$value = '<em>Empty</em>';
-				}
-				
-				$this->setHtml('text', apply_filters('xe/html/text/type=' . $type . '/format=' . $rtn_format, $value));
+				// text filter: xe/html/text/type={ACF-type}/format={ACF-return-format}
+				$this->setHtml('text', 
+					apply_filters('xe/html/text/type=' . $type . '/format=' . $rtn_format, $text)
+				);
 			}
 			
 			// no return format
 			else {
 				
-				// Value
-				$this->setHtml('value', apply_filters('xe/html/value/type=' . $type, $value));
+				// value filter: xe/html/value/type={ACF-type}
+				$this->setHtml('value', 
+					apply_filters('xe/html/value/type=' . $type, $value)
+				);
 				
-				// Text
-				if ( empty($value) ) {
-					$value = '<em>Empty</em>';
-				}
-				
-				$this->setHtml('text', apply_filters('xe/html/text/type=' . $type, $value));
+				// text filter: xe/html/text/type={ACF-type}
+				$this->setHtml('text', 
+					apply_filters('xe/html/text/type=' . $type, $text)
+				);
 			}
 			
+			return $this;
 		}
 	
 	
@@ -147,30 +153,32 @@ class X_Editable_ACF_Field extends X_Editable_Meta {
 			
 			if ( NULL !== $input_type ) {
 				$this->setOption('input_type', $input_type);	
+				return $this;
 			}
-			else {
-				$fieldType = 'text';
-				
-				$acf_type = $this->fieldProp('type');
-				
-				$namedFields = array(
-					// ACF TYPE => X-EDITABLE INPUT
-					'text' => 'text',
-					'textarea'	=> 'textarea',
-					'select' => 'select',
-					'date_picker' => 'date',
-					'number' => 'number',
-				);
-				
-				if ( $namedFields[$acf_type] ) {
-					$fieldType = $namedFields[$acf_type];
-				}
-				
-				// default = 'text'
-				$this->setOption('input_type', apply_filters('xe/input_type/type=' . $this->fieldProp('type'), $fieldType, $this->meta) );
-				
-			}
+			
+			$acf_type = $this->fieldProp('type');
+			$input = 'text'; // default input type
+			$namedFields = array(
+				// ACF field-type name => X-Editable input name
+				'text' => 'text',
+				'textarea'	=> 'textarea',
+				'select' => 'select',
+				'date_picker' => 'date',
+				'number' => 'number',
+				'checkbox' => 'checklist',
+			);
+			
+			if ( $namedFields[$acf_type] )
+				$input = $namedFields[$acf_type];
+			
+			$this->setOption('input_type', 
+				apply_filters('xe/input_type/type=' . $acf_type, 
+					$input, 
+					$this->meta
+				) 
+			);	
 		
+			return $this;
 		}
 		
 }

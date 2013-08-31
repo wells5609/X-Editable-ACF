@@ -1,7 +1,14 @@
 <?php
+/**
+* @package X-Editable-ACF
+*/
 
 class X_Editable_ACF_True_False extends X_Editable_ACF_Field {
 	
+	var $valid_inputs = array(
+		'select',
+		'checklist',
+	);
 	
 	function __construct( $field_name, $object_id, $args = array() ) {
 		
@@ -10,42 +17,29 @@ class X_Editable_ACF_True_False extends X_Editable_ACF_Field {
 			
 		/* Field-specific args */
 		
-		$this->valid_inputs = array(
-			'select',
-			'checklist',
-		);
-		
 		/* Filters */
-		
 		add_filter('xe/external/text/type='. $this->fieldProp('type'), array($this, 'external_text'), 10, 2);
-		
-		$this->set_input_type();
-		
-		// Custom setup functions
-		$this->setSource();
-		
+	
 	}
 	
 	
 	// filter applied in X_Editable_ACF_Functions::create_external()
 	function external_text( $field_value, $field ) {
-		
-		if ( empty($field_value) ) {
-			$return = 'Empty';
-		}
-		elseif ( 1 == $field_value ) {
-			$return = 'Yes';
-		}
-		elseif ( 0 == $field_value ) {
-			$return = 'No';	
-		}
-		
-		return $return;
-		
+		if ( empty($field_value) )
+			return 'Empty';
+		elseif ( 1 == $field_value )
+			return 'Yes';
+		elseif ( 0 == $field_value )
+			return 'No';
 	}
 		
-	// Called in constructor - sets data-source for element
-	private function setSource() {
+	
+	/** =======================
+		Redefined functions 
+		(from parent class)
+	======================== */
+	
+	function setSource() {
 		
 		$source = array(
 			1 => 'Yes',
@@ -56,19 +50,13 @@ class X_Editable_ACF_True_False extends X_Editable_ACF_Field {
 	}
 		
 	
-	/** =======================
-		Redefined functions 
-		(from parent class)
-	======================== */
-	
 	function set_input_type($input_type = NULL) {
 		
-		if ( ! is_null($input_type) && in_array($input_type, $this->valid_inputs) ) {
+		if ( ! is_null($input_type) && in_array($input_type, $this->valid_inputs) )
 			$input = $input_type;	
-		}
-		else {
-			$input = $this->valid_inputs[0];	
-		}
+		
+		else
+			$input = $this->valid_inputs[0]; // select
 		
 		$this->setOption('input_type', $input);
 			
@@ -82,53 +70,40 @@ class X_Editable_ACF_True_False extends X_Editable_ACF_Field {
 		
 		//	1.	Empty value
 		
-		if ( empty($value) ) :
-		
-			$empty_text = $this->getOption('empty_text');
+		if ( empty($value) ) {
 			
-			if ( $empty_text ) {
-				if ( ! is_bool($empty_text) ) {
-					$this->setHtml('text', $empty_text);
-				}
-				elseif ( $text = $this->fieldProp('message') ) {
-					$this->setHtml('text', $text);
-				}
-			}
-			else {
-				$this->setHtml('text', 'Edit');	
-			}
 			$this->setHtml('value', '');
-			
-				
-		//	2.	Has Value
 		
-		else :
+			if ( $empty_text = $this->getOption('empty_text') && is_string($empty_text) )
+				$this->setHtml('text', $empty_text);
+						
+			// if field has a "message" 
+			elseif ( $text = $this->fieldProp('message') )
+				$this->setHtml('text', $text);	
+			
+			else
+				$this->setHtml('text', 'Edit');
+		
+		}
+		else {
 				
 			$this->setHtml('value', $value);
 			
-			if ( 1 == $value ) {
-				
+			if ( 1 == $value )		
 				$this->setHtml('text', 'Yes');
-			
-			}
-			elseif ( 0 == $value ) {
-				$this->setHtml('text', 'No');
-			}
-			
-		endif;
 		
+			elseif ( 0 == $value )
+				$this->setHtml('text', 'No');
+			
+		}
 	}
 
 }
 
-
-/* Template tags */
-
+// Template tag
 function xe_true_false( $field_name, $object_id, $args = array() ) {
 	
 	xe_the_field('True_False', $field_name, $object_id, $args);
-	
 }
-
 
 ?>
