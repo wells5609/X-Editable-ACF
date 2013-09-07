@@ -100,10 +100,4 @@ class X_Editable_ACF_True_False extends X_Editable_ACF_Field {
 
 }
 
-// Template tag
-function xe_true_false( $field_name, $object_id, $args = array() ) {
-	
-	xe_the_field('True_False', $field_name, $object_id, $args);
-}
-
 ?>

@@ -137,15 +137,12 @@ class X_Editable_AJAX_Callbacks {
 				endforeach;
 			}
 			else {
-				
 				// if single, save value not in array
 				if ( $single )
-					$terms = process_term($value, $taxonomy);
-								
+					$terms = process_term($value, $taxonomy);			
 				else
 					$terms[] = process_term($value, $taxonomy);
 			}
-			
 			wp_set_object_terms($object_id, $terms, $taxonomy, $single);
 		}
 		die();
@@ -268,7 +265,7 @@ X_Editable_AJAX_Callbacks::init();
 
 function process_term($term_id, $taxonomy, $args = array()){
 	$parent = 0;
-		
+	// if hierarchical tax, use ID's to set terms
 	$use_ids = is_taxonomy_hierarchical($taxonomy);
 
 	if ( $use_ids && isset($args['parent']) )
@@ -277,8 +274,10 @@ function process_term($term_id, $taxonomy, $args = array()){
 	if ( term_exists((int)$term_id, $taxonomy, $parent) ) {
 	
 		if ( $use_ids )
+			// taxonomy is hierarchical => use/return IDs
 			return (int) $term_id;
 		else
+			// tax not heirarchical (e.g. tags) => use/return names
 			return get_term_by('id', $term_id, $taxonomy)->name;
 	}
 
@@ -286,10 +285,8 @@ function process_term($term_id, $taxonomy, $args = array()){
 	$new_term = wp_insert_term((int)$term_id, $taxonomy, $args);
 	$new_term_id = $new_term['term_id'];
 	
-	// taxonomy is hierarchical => use IDs
 	if ( $use_ids )
 		return (int) $new_term_id;
-	// tax not heirarchical (e.g. tags) => use names
 	else
 		return get_term_by('id', $new_term_id, $taxonomy)->name;
 	

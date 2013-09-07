@@ -55,16 +55,4 @@ class X_Editable_ACF_Date extends X_Editable_ACF_Field {
 
 }
 
-
-// Template tag
-function xe_date( $field_name, $object_id, $args = array() ) {
-	
-	// Never show external date values as ul
-	if ( isset($args['external']) && $args['external'] ) {
-		$args['values_as_ul'] = false;	
-	}
-	
-	xe_the_field('Date', $field_name, $object_id, $args);		
-}
-
 ?>

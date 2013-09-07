@@ -72,13 +72,4 @@ class X_Editable_ACF_Textarea extends X_Editable_ACF_Field {
 
 }
 
-
-/* Template tags */
-
-function xe_textarea( $field_name, $object_id, $args = array() ) {
-	
-	xe_the_field('Textarea', $field_name, $object_id, $args);
-}
-
-
 ?>

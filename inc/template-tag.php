@@ -1,5 +1,5 @@
 <?php
-/** Generic Template Tag **/
+/** Template Tags */
 
 function xe_the_field( $type, $field_name, $object_id, $args = array() ) {
 	
@@ -18,7 +18,6 @@ function xe_the_field( $type, $field_name, $object_id, $args = array() ) {
 		
 		$field = new X_Editable_Meta($object_id, $field_name, $args);
 	}
-	
 	extract($args);
 	
 	if ( isset($input_type) && $input_type )
@@ -55,10 +54,59 @@ function xe_the_field( $type, $field_name, $object_id, $args = array() ) {
 		$field->html();
 }
 
-// wrapper for xe_the_field()
+
+/** editable_field
+* wrapper for xe_the_field()
+*
+* @param	string	$type			The type of field, from class name (e.g. 'Date', 'True_False', 'Taxonomy')
+* @param	string	$field_name		The name of the field
+* @param	int		$object_id		The ID of the object being edited (e.g. post ID, user ID)
+* @param	array	$args			Arguments for X-Editable field generation (e.g. 'input_type', 'show_label', 'external')
+* @return	string|void				HTML markup for X-Editable field
+*/
 function editable_field($type, $field_name, $object_id, $args = array() ){
 	xe_the_field($type, $field_name, $object_id, $args);	
 }
 
 
+/** 
+*	Template tags for built-in fields
+*	Relocated here so autoloading works.
+*/
+
+// TEXT
+function xe_text( $field_name, $object_id, $args = array() ) {
+	xe_the_field('Text', $field_name, $object_id, $args);
+}
+// TAXONOMY
+function xe_taxonomy( $field_name, $object_id, $args = array() ) {
+	xe_the_field('Taxonomy', $field_name, $object_id, $args);
+}
+// DATE
+function xe_date( $field_name, $object_id, $args = array() ) {
+	// Never show external date values as ul
+	if ( isset($args['external']) && $args['external'] )
+		$args['values_as_ul'] = false;
+	xe_the_field('Date', $field_name, $object_id, $args);		
+}
+// NUMBER
+function xe_number( $field_name, $object_id, $args = array() ) {
+	xe_the_field('Number', $field_name, $object_id, $args);
+}
+// SELECT
+function xe_select( $field_name, $object_id, $args = array() ) {	
+	xe_the_field('Select', $field_name, $object_id, $args);		
+}
+// TRUE_FALSE
+function xe_true_false( $field_name, $object_id, $args = array() ) {	
+	xe_the_field('True_False', $field_name, $object_id, $args);
+}
+// TEXTAREA
+function xe_textarea( $field_name, $object_id, $args = array() ) {	
+	xe_the_field('Textarea', $field_name, $object_id, $args);
+}
+// USER
+function xe_user( $field_name, $object_id, $args = array()) {
+	xe_the_field('User', $field_name, $object_id, $args);
+}
 ?>

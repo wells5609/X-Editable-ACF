@@ -72,11 +72,4 @@ class X_Editable_ACF_Number extends X_Editable_ACF_Field {
 
 }
 
-
-// Template tag
-function xe_number( $field_name, $object_id, $args = array() ) {
-	
-	xe_the_field('Number', $field_name, $object_id, $args);
-}
-
 ?>

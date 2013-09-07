@@ -56,11 +56,4 @@ class X_Editable_ACF_Select extends X_Editable_ACF_Field {
 
 }
 
-
-// Template tag
-function xe_select( $field_name, $object_id, $args = array() ) {
-	
-	xe_the_field('Select', $field_name, $object_id, $args);		
-}
-
 ?>

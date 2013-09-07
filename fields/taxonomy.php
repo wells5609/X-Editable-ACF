@@ -157,10 +157,4 @@ class X_Editable_ACF_Taxonomy extends X_Editable_ACF_Field {
 
 }
 
-// Template tag
-function xe_taxonomy( $field_name, $object_id, $args = array() ) {
-	
-	xe_the_field('Taxonomy', $field_name, $object_id, $args);
-}
-
 ?>

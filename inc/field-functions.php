@@ -23,11 +23,10 @@ class X_Editable_Field_Functions {
 	 *	A poorly named function (is create_values better?)
 	 *	This produces the "external values" output HTML - e.g. a <ul> of taxonomy terms.
 	 *	Basically, it shows the field values outside the editable HTML element (usually <a>)
-	 *
 	 */
 		public static function create_external( $id, $field, $html, $as_ul, $return = false ) {
 			
-			$echo = '';
+			$str = '';
 			
 			$ext_html = array(
 				'tag' => 'div',
@@ -52,14 +51,14 @@ class X_Editable_Field_Functions {
 			do_action('xe/external/before', $field);
 			
 			// wrapper
-			$echo .= '<'.$ext_html['tag'].' id="'.$html_id.'" ';
+			$str .= '<'.$ext_html['tag'].' id="' . esc_attr($html_id) . '" ';
 			
 			foreach($ext_html['attributes'] as $attr => $val) :
 				if ( isset($val) && is_array($val) )
 					$val = implode(' ', $val);
-				$echo .= $attr . '="' . $val . '" ';
+				$str .= $attr . '="' . esc_attr($val) . '" ';
 			endforeach;
-			$echo .= '>';
+			$str .= '>';
 			
 			// values as unordered list
 			if ( $as_ul && is_array($text) ) {
@@ -68,22 +67,22 @@ class X_Editable_Field_Functions {
 				
 				do_action('xe/external/ul/before', $field);
 				
-				$echo .= '<ul ';
+				$str .= '<ul ';
 					
 				foreach($ul_html as $attr => $val) :
 					if ( isset($val) && is_array($val) )
 						$val = implode(' ', $val);
-					$echo .= $attr . '="' . $val . '" ';
+					$str .= $attr . '="' . esc_attr($val) . '" ';
 				endforeach;
 				
-				$echo .= '>';
+				$str .= '>';
 				
 				// multiple values - text returned as array
 				foreach($text as $t) :
-					$echo .= '<li>' . $t . '</li>';
+					$str .= '<li>' . $t . '</li>';
 				endforeach;
 							
-				$echo .= '</ul>';
+				$str .= '</ul>';
 				
 				do_action('xe/external/ul/after', $field);
 				
@@ -100,21 +99,21 @@ class X_Editable_Field_Functions {
 						$textArray[] = $t;
 					endforeach;
 					
-					$echo .= implode(', ', $textArray);
+					$str .= implode(', ', $textArray);
 				}
 				
 				elseif ( $text )
-					$echo .=  $text;		
+					$str .=  $text;		
 			}
 			
-			$echo .= '</'.$ext_html['tag'].'>';
+			$str .= '</'.$ext_html['tag'].'>';
 			
 			do_action('xe/external/after', $field);
 			
 			if ( $return )
-				return $echo;
+				return $str;
 			
-			echo $echo;
+			echo $str;
 		}
 	
 	
@@ -137,28 +136,27 @@ class X_Editable_Field_Functions {
 				
 				$html = apply_filters('xe/label/html', $defaults, $field);
 				
-				if ( NULL !== $attributes ) {
-					$html['attributes'] = array_merge($html['attributes'], $attributes);	
-				}
+				if ( NULL !== $attributes )
+					$html['attributes'] = array_merge($html['attributes'], $attributes);
 				
 				do_action('xe/label/before', $field);
 				
-				$echo = '<'.$html['tag'].' ';
+				$str = '<'.$html['tag'].' ';
 					
 				foreach($html['attributes'] as $attr => $val) :
 					if ( isset($val) && is_array($val) )
 						$val = implode(' ', $val);
-					$echo .= $attr . '="' . $val . '" ';
+					$str .= $attr . '="' . esc_attr($val) . '" ';
 				endforeach;
 				
-				$echo .= '>' . $html['text'] . '</'.$html['tag'].'>';
+				$str .= '>' . $html['text'] . '</'.$html['tag'].'>';
 			
 				do_action('xe/label/after', $field);
 				
 				if ( $return )
-					return $echo;
+					return $str;
 					
-				echo $echo;
+				echo $str;
 			}
 		}
 	
@@ -171,58 +169,58 @@ class X_Editable_Field_Functions {
 	 */ 
 		public static function create_element( $field, $object_id, $html, $options, $return = false ) {
 			
-			$echo = '';
+			$str = '';
 					
 			do_action( 'xe/element/before', $field );
 					
-			$echo .= '<' . $html['tag'] . ' ';
+			$str .= '<' . $html['tag'] . ' ';
 			
 			// element ID - format: xe-{{meta_name or taxonomy}}
-			$echo .= 'id="xe-' . $field['name'] . '" ';
+			$str .= 'id="xe-' . $field['name'] . '" ';
 			
 			// CLASS
 			if ( isset($html['css_class']) )
-				$echo .= 'class="' . implode(' ', $html['css_class']) . '" ';
+				$str .= 'class="' . implode(' ', $html['css_class']) . '" ';
 			
 			// NAME - IMPORTANT - submitted to server
-			$echo .= 'data-name="'. $field['name'] .'" ';
+			$str .= 'data-name="'. $field['name'] .'" ';
 			
 			// NONCE
-			$echo .= 'data-nonce="'. wp_create_nonce( $field['name'] ) .'" ';
+			$str .= 'data-nonce="'. wp_create_nonce( $field['name'] ) .'" ';
 			
 			// INPUT TYPE
-			$echo .= 'data-type="'. $options['input_type'] .'" ';
+			$str .= 'data-type="'. $options['input_type'] .'" ';
 			
 			// Pop-up title	
-			$echo .= 'data-original-title="Edit: '. $field['label'] .'" ';
+			$str .= 'data-original-title="Edit: '. $field['label'] .'" ';
 			
 			// ACF field type
-			$echo .= 'data-acf_type="' . $field['type'] . '" ';
+			$str .= 'data-acf_type="' . $field['type'] . '" ';
 			
 			// KEY
 			if ( $field['key'] ) {
 				$key = trim(str_replace('field_', '', $field['key']));
-				$echo .= 'data-key="' . $key . '" ';
+				$str .= 'data-key="' . $key . '" ';
 			}
 			
 			//	VALUE
-			$echo .= 'data-value="' . $html['value'] . '" ';
+			$str .= 'data-value="' . $html['value'] . '" ';
 					
 			//	PK (primary key)
-			$echo .= 'data-pk="'. $object_id .'" ';
+			$str .= 'data-pk="'. $object_id .'" ';
 			
 			// SOURCE
 			if ( isset($html['source']) )
-				$echo .= 'data-source="' . esc_attr( $html['source'] ) . '" ';
+				$str .= 'data-source="' . esc_attr( $html['source'] ) . '" ';
 			
 			//	user-defined data-* options
 			if ( isset($html['data_args']) ) {
 				foreach ($html['data_args'] as $data_option => $data_value) :
-					$echo .= 'data-' . $data_option . '="' . esc_attr($data_value) . '" ';
+					$str .= 'data-' . $data_option . '="' . esc_attr($data_value) . '" ';
 				endforeach;
 			}
 	
-			$echo .= '>';
+			$str .= '>';
 			
 			//	TEXT
 			
@@ -230,25 +228,25 @@ class X_Editable_Field_Functions {
 			if ( isset($html['data_args']) && in_array('edit_link', $html['data_args']) ) {
 				
 				if ( XE_CAN_EDIT )
-					$echoText = apply_filters('xe/element/html/text/external/type=' . $field['type'], 'Edit <br>', $field);
+					$strText = apply_filters('xe/element/html/text/external/type=' . $field['type'], 'Edit <br>', $field);
 				else
-					$echoText = apply_filters('xe/element/html/text/external/type=' . $field['type'], '', $field);
+					$strText = apply_filters('xe/element/html/text/external/type=' . $field['type'], '', $field);
 			}
 			else {
-				$echoText = $html['text'];
+				$strText = $html['text'];
 			}
 			
-			$echo .= $echoText;
+			$str .= $strText;
 					
 			// close tag	
-			$echo .= '</' . $html['tag'] . '>';
+			$str .= '</' . $html['tag'] . '>';
 			
 			do_action( 'xe/element/after', $field );	
 				
 			if ( $return )
-				return $echo;
+				return $str;
 			
-			echo $echo;
+			echo $str;
 			
 		}
 	

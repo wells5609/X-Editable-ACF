@@ -69,12 +69,4 @@ class X_Editable_ACF_Text extends X_Editable_ACF_Field {
 
 }
 
-
-// Template tag
-function xe_text( $field_name, $object_id, $args = array() ) {
-	
-	xe_the_field('Text', $field_name, $object_id, $args);
-}
-
-
 ?>
